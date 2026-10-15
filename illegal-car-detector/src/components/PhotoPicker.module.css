@@ -1,0 +1,9 @@
+.picker {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.buttons {
+  display: grid;
+  gap: var(--space-3);
+}

@@ -1,0 +1,151 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.heading {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+}
+
+.sectionTitle {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+}
+
+.total {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.message {
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+.errorBox {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  font-weight: 700;
+}
+
+/* 통계 카드 4개: 375px에서는 2×2, 넓으면 4칸 한 줄 */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  list-style: none;
+}
+
+@media (min-width: 560px) {
+  .statGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.statCard {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.statIcon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.statName {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.statCount {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.statUnit {
+  margin-left: 2px;
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.list {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.itemIcon {
+  flex-shrink: 0;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.itemBody {
+  min-width: 0;
+}
+
+.itemTitle {
+  font-weight: 700;
+}
+
+.itemMeta {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+}
+
+.feedbackTag {
+  margin-top: var(--space-1);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+/* 기록이 없을 때 */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.emptyTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+}

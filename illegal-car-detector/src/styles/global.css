@@ -1,0 +1,91 @@
+/* 앱 전체에 적용되는 기본 스타일 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* 키보드로 이동할 때 포커스가 위 헤더·아래 탭에 가려지지 않게 */
+  scroll-padding-top: calc(var(--header-height) + env(safe-area-inset-top) + 8px);
+  scroll-padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 8px);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+  color: var(--color-text);
+  background: var(--color-bg);
+  word-break: keep-all; /* 한국어 단어가 중간에 끊기지 않게 */
+  overflow-wrap: anywhere; /* 아주 긴 글자는 줄바꿈해서 가로 스크롤 방지 */
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+/* 키보드로 이동할 때 포커스 위치가 잘 보이게 */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* 페이지·단계가 바뀔 때 프로그램이 제목으로 포커스를 옮겨요.
+   (스크린리더가 새 제목을 읽게 하려는 것이라 테두리는 숨겨요) */
+h1[tabindex='-1']:focus {
+  outline: none;
+}
+
+/* 화면에는 안 보이지만 스크린리더는 읽는 글자 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

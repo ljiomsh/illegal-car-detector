@@ -1,0 +1,9 @@
+.disclaimer {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border-strong);
+  color: var(--color-text-sub);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}

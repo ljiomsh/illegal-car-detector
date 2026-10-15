@@ -1,0 +1,69 @@
+.card {
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+}
+
+.count {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.list {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+/* 글자를 눌러도 체크되도록 label 전체를 큰 터치 영역으로 */
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--button-min-height);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.item:has(.checkbox:checked) {
+  border-color: var(--color-safe);
+  background: var(--color-safe-soft);
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--color-safe-text);
+  cursor: pointer;
+}
+
+.done {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-safe-soft);
+  color: var(--color-safe-text);
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  text-align: center;
+}

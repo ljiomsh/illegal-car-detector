@@ -1,0 +1,76 @@
+.page {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.hero {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.heading {
+  color: var(--color-text);
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.sectionTitle {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+}
+
+/* 좁은 화면은 1줄, 넓은 화면은 2줄로 */
+.typeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+  list-style: none;
+}
+
+.typeCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.typeIcon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--type-soft);
+  font-size: 1.625rem;
+  line-height: 1;
+}
+
+.typeName {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.typeDesc {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+}
+
+.privacy {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-align: center;
+}

@@ -1,0 +1,112 @@
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* 키보드 사용자를 위한 "본문으로 건너뛰기" 링크 (Tab을 누르면 나타나요) */
+.skipLink {
+  position: absolute;
+  top: -100px;
+  left: var(--space-2);
+  z-index: 100;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.skipLink:focus {
+  top: var(--space-2);
+}
+
+/* 위쪽 헤더 */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--header-height);
+  padding: 0 var(--space-4);
+  padding-top: env(safe-area-inset-top);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: var(--color-primary);
+  font-size: var(--font-size-md);
+  font-weight: 800;
+  text-decoration: none;
+  text-align: center;
+}
+
+/* 페이지 내용 */
+.main {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
+  /* 아래 탭에 내용이 가려지지 않게 여백을 둬요 */
+  padding-bottom: calc(var(--tabbar-height) + var(--space-8) + env(safe-area-inset-bottom));
+}
+
+/* 아래쪽 탭 */
+.tabbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.tabList {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  list-style: none;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--tabbar-height);
+  color: var(--color-text-sub);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-decoration: none;
+  border-top: 3px solid transparent;
+}
+
+.tab:hover {
+  background: var(--color-bg);
+}
+
+.tabIcon {
+  font-size: 1.375rem;
+  line-height: 1;
+}
+
+/* 지금 보고 있는 탭: 색 + 굵기 + 위쪽 막대로 표시 */
+.tabActive {
+  color: var(--color-primary);
+  font-weight: 800;
+  border-top-color: var(--color-primary);
+}
+
+/* "본문으로 건너뛰기"로 이동했을 때 본문 전체에 테두리가 생기지 않게 */
+.main:focus {
+  outline: none;
+}

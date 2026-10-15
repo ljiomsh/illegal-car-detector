@@ -1,0 +1,48 @@
+.box {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.legend {
+  float: left; /* legend를 상자 안쪽에 두기 위한 요령 */
+  width: 100%;
+  padding: 0;
+  font-size: var(--font-size-md);
+  font-weight: 800;
+}
+
+.options {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.message {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+}
+
+.error {
+  color: var(--color-danger-text);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.thanks {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* 보낸 뒤 프로그램이 포커스를 옮기는 곳이라 테두리는 숨겨요. */
+.thanks:focus {
+  outline: none;
+}
