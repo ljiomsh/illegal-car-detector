@@ -1,0 +1,50 @@
+# ───────────── 기본 설정 (개발용, 프로필을 따로 지정하지 않으면 이 설정) ─────────────
+# H2 데이터베이스를 파일(./data/illegalcar.mv.db)로 저장해서, 서버를 껐다 켜도 기록이 남아요.
+spring:
+  application:
+    name: illegalcardetector
+  config:
+    # API 키 같은 비밀 값은 backend/secrets.properties에 따로 써요. (git에 올라가지 않는 파일)
+    # 파일이 없어도 괜찮아요(optional). 환경변수가 있으면 환경변수가 먼저예요.
+    import: optional:file:./secrets.properties
+  datasource:
+    url: jdbc:h2:file:./data/illegalcar
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update # 엔티티를 보고 테이블을 자동으로 만들거나 고쳐요
+    open-in-view: false
+  h2:
+    console:
+      enabled: true # http://localhost:8080/h2-console
+      path: /h2-console
+  servlet:
+    multipart:
+      max-file-size: 5MB # /api/analyze 사진 최대 크기
+      max-request-size: 6MB
+
+server:
+  port: 8080
+  tomcat:
+    max-swallow-size: 20MB # 너무 큰 사진도 연결을 끊지 않고 400 안내를 보낼 수 있게
+
+# NVIDIA Build API 주소 (API 키는 여기에 쓰지 말고 secrets.properties나 환경변수 NVIDIA_API_KEY로 넣어요)
+nvidia:
+  base-url: https://integrate.api.nvidia.com/v1
+
+---
+# ───────────── postgres 프로필 (Supabase 같은 PostgreSQL에 연결할 때) ─────────────
+# 실행: gradlew.bat bootRun --args="--spring.profiles.active=postgres"
+# 접속 정보는 환경변수 DB_URL, DB_USERNAME, DB_PASSWORD로만 받아요. 이 파일에 값을 쓰지 마세요!
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  h2:
+    console:
+      enabled: false

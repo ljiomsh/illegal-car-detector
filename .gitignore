@@ -1,0 +1,4 @@
+# 비밀 값(API 키 등)이 들어갈 수 있는 환경변수 파일은 커밋하지 않아요.
+.env
+.env*.local
+secrets.properties

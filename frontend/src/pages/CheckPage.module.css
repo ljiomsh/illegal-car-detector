@@ -1,0 +1,102 @@
+.page {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.heading {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.lead {
+  color: var(--color-text-sub);
+}
+
+.actions {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.status {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.privacy {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.error {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  font-weight: 700;
+}
+
+/* MEDIUM 경고 (주황색) */
+.warning {
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  background: var(--color-warning-soft);
+  color: var(--color-warning-text);
+  font-weight: 700;
+}
+
+/* "○○에도 해당될 수 있어요" */
+.notice {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* LOW: 다시 찍기 안내 */
+.lowCard {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 2px solid var(--color-warning);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.lowTitle {
+  color: var(--color-warning-text);
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+}
+
+.feedback {
+  display: grid;
+}
+
+.typeSummary {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+/* 외부 AI가 알려 준 판단 근거 */
+.reasonCard {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+}
+
+.reasonTitle {
+  color: var(--color-primary);
+  font-size: var(--font-size-md);
+  font-weight: 800;
+}
