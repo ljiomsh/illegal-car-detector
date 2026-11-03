@@ -21,16 +21,17 @@ import tools.jackson.databind.json.JsonMapper;
  */
 public class AnalysisParser {
 
-	public static final String MODEL_VERSION = "deepseek-v4.1-flash";
-
 	private static final int MAX_REASON_LENGTH = 300;
 	private static final Pattern THINK_BLOCK =
 			Pattern.compile("<think>.*?</think>", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
 	private final JsonMapper jsonMapper;
+	private final String modelVersion;
 
-	public AnalysisParser(JsonMapper jsonMapper) {
+	// modelVersion: 결과에 함께 담을 모델 이름 (NvidiaVisionClient.modelVersion())
+	public AnalysisParser(JsonMapper jsonMapper, String modelVersion) {
 		this.jsonMapper = jsonMapper;
+		this.modelVersion = modelVersion;
 	}
 
 	/** AI의 답(content)을 AnalyzeResponse로 바꿔요. 문제가 있으면 AiUnavailableException */
@@ -41,7 +42,7 @@ public class AnalysisParser {
 		Map<ViolationType, Double> probabilities = normalize(json.path("probabilities"), label);
 		String reason = parseReason(json.path("reason"));
 
-		return new AnalyzeResponse(label, probabilities.get(label), probabilities, reason, MODEL_VERSION);
+		return new AnalyzeResponse(label, probabilities.get(label), probabilities, reason, modelVersion);
 	}
 
 	// <think>...</think>를 지워요. 닫는 태그만 있으면 그 뒤의 글만 써요.

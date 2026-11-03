@@ -15,7 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
  */
 class AnalysisParserTest {
 
-	private final AnalysisParser parser = new AnalysisParser(JsonMapper.builder().build());
+	private final AnalysisParser parser = new AnalysisParser(JsonMapper.builder().build(), "deepseek-v4.1-flash");
 
 	@Test
 	void 생각_과정과_코드펜스가_있어도_첫_JSON만_꺼낸다() {

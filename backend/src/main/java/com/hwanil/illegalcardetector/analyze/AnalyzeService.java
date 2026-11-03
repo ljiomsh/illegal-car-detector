@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * 사진 판별: NVIDIA AI에 사진을 보내고 → 답에서 결과를 꺼내 검사·보정해요.
+ * 사진 판별: 비전 LLM(NVIDIA Build)에 사진을 보내고 → 답에서 결과를 꺼내 검사·보정해요.
  * 사진은 저장하지 않고, 요청이 끝나면 버려요.
  */
 @Slf4j
@@ -18,7 +18,7 @@ public class AnalyzeService {
 
 	public AnalyzeService(NvidiaVisionClient nvidiaVisionClient, JsonMapper jsonMapper) {
 		this.nvidiaVisionClient = nvidiaVisionClient;
-		this.analysisParser = new AnalysisParser(jsonMapper);
+		this.analysisParser = new AnalysisParser(jsonMapper, nvidiaVisionClient.modelVersion());
 	}
 
 	public AnalyzeResponse analyze(byte[] image, String mimeType) {

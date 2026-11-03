@@ -11,10 +11,10 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * POST /api/judgments 요청 본문 (브라우저 안의 AI가 낸 판별 결과)
+ * POST /api/judgments 요청 본문 (/api/analyze가 돌려준 판별 결과를 프론트가 그대로 보내요)
  * 예: { "label": "CROSSWALK", "confidence": 0.92,
  *       "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "NORMAL": 0.01 },
- *       "modelVersion": "v1" }
+ *       "modelVersion": "deepseek-v4.1-flash" }
  *
  * 하나씩 보는 검사는 각 필드의 어노테이션이 하고,
  * 여러 필드를 함께 보는 검사(확률 합계, label이 최댓값인지 등)는 @ValidProbabilities가 해요.

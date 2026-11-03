@@ -2,11 +2,12 @@
 
 환일고 「환일야호」 팀 · 2026 AI동행 프로젝트 자율탐구 출품작
 
-사진 분석은 **브라우저 안에서** AI가 해요. 이 서버는 그 결과(숫자)만 받아서
-① 유형별 안내(위험한 이유·신고 요건·신고 방법)를 돌려주고 ② 판별 기록과 피드백을 저장하고 ③ 통계를 보여 줘요.
+이 서버는 ① 사진을 비전 LLM(NVIDIA Build · DeepSeek V4.1 Flash)에 보내 4가지 유형으로 판별하고
+② 유형별 안내(위험한 이유·신고 요건·신고 방법)를 돌려주고 ③ 판별 기록과 피드백을 저장하고 ④ 통계를 보여 줘요.
 
-> **개인정보 원칙**: 사진, 위치(GPS), IP처럼 사람을 알아볼 수 있는 정보는 받지도 저장하지도 않아요.
-> 저장하는 것은 AI가 낸 유형·확률·모델 버전·시각·피드백뿐이에요.
+> **개인정보 원칙**: 사진은 판별할 때만 NVIDIA로 보내고, 저장하지도 로그에 남기지도 않아요.
+> 위치(GPS), IP처럼 사람을 알아볼 수 있는 정보는 받지 않아요.
+> 저장하는 것은 AI가 낸 유형·확률·모델 이름·시각·피드백뿐이에요.
 
 - Spring Boot 4.1.1 · Java 21 · Gradle(Groovy)
 - Spring Web MVC, Spring Data JPA, Validation, H2(개발용), PostgreSQL(배포용), Lombok, springdoc-openapi 3.1.1
@@ -78,7 +79,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 | 메서드 | 주소 | 설명 | 성공 |
 |---|---|---|---|
 | GET | `/api/health` | 서버 상태 `{ "status": "ok" }` | 200 |
-| POST | `/api/analyze` | 사진 → 외부 AI(NVIDIA) 판별 (multipart `image`) | 200 |
+| POST | `/api/analyze` | 사진 → 비전 LLM(NVIDIA Build) 판별 (multipart `image`) | 200 |
 | POST | `/api/judgments` | 판별 결과 저장 + 유형별 안내 | 201 |
 | GET | `/api/judgments?limit=20` | 최근 기록, 최신순 (limit 1~100, 기본 20) | 200 |
 | POST | `/api/judgments/{id}/feedback` | 피드백 저장 (다시 보내면 덮어써요) | 204 |
@@ -89,9 +90,20 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 유형(type, label)은 `CROSSWALK`(횡단보도), `SIDEWALK`(인도), `HYDRANT`(소화전), `NORMAL`(정상) 중 하나이고,
 **대문자로 정확히** 써야 해요.
 
-### POST /api/analyze — 외부 AI 사진 판별 (발표용 임시)
+### POST /api/analyze — AI 사진 판별
 
-사진을 받아 NVIDIA Build API(`deepseek-ai/deepseek-v4.1-flash`)로 판별해요. **사진은 저장하지 않고 로그에도 남기지 않아요.**
+사진을 받아 NVIDIA Build API의 비전 LLM으로 판별해요. **사진은 저장하지 않고 로그에도 남기지 않아요.**
+판별 기준은 라벨링 기준서의 4가지 정의를 프롬프트로 알려 줘요. (`NvidiaVisionClient.PROMPT`)
+
+- 설정: `src/main/resources/application.yaml`
+  ```yaml
+  nvidia:
+    base-url: https://integrate.api.nvidia.com/v1
+    model: deepseek-ai/deepseek-v4.1-flash   # 사진을 볼 수 있는 모델
+    read-timeout: 60s                        # AI 응답을 기다리는 최대 시간
+  ```
+  - 응답의 `modelVersion`은 모델 이름에서 회사 이름(`/` 앞)을 뺀 값이에요. (예: `deepseek-v4.1-flash`, 최대 20자)
+  - 모델을 바꾸면 `frontend/src/constants/aiInfo.js`의 화면 안내 문구도 같이 바꿔 주세요.
 
 - 요청: `multipart/form-data`, 필드 이름 `image`. JPG·PNG·WEBP만, 최대 5MB (파일 앞부분을 직접 보고 형식을 확인해요)
 - API 키(`NVIDIA_API_KEY`): **`backend/secrets.properties`** 파일(git에 올라가지 않음) 또는 환경변수에서 읽어요.
@@ -130,7 +142,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 | 상황 | 응답 |
 |---|---|
 | 사진이 아니거나 5MB 초과, `image` 필드 없음 | 400 `BAD_REQUEST` |
-| NVIDIA 오류·시간 초과(연결 10초, 응답 60초)·이상한 답·빈 답 | 502 `AI_UNAVAILABLE` "AI 분석에 실패했어요. 다시 시도해 주세요." |
+| NVIDIA 오류·시간 초과(연결 10초, 응답 `nvidia.read-timeout`)·이상한 답·빈 답 | 502 `AI_UNAVAILABLE` "AI 분석에 실패했어요. 다시 시도해 주세요." |
 | `NVIDIA_API_KEY`가 없음 | 503 `AI_NOT_CONFIGURED` |
 
 - 판별 프롬프트와 호출 코드: `analyze/NvidiaVisionClient.java`, 응답 해석: `analyze/AnalysisParser.java`
@@ -144,7 +156,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
   "label": "CROSSWALK",
   "confidence": 0.92,
   "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "NORMAL": 0.01 },
-  "modelVersion": "v1"
+  "modelVersion": "deepseek-v4.1-flash"
 }
 ```
 
@@ -183,7 +195,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
     "confidence": 0.92,
     "confidenceLevel": "HIGH",
     "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "NORMAL": 0.01 },
-    "modelVersion": "v1",
+    "modelVersion": "deepseek-v4.1-flash",
     "createdAt": "2026-10-16T09:12:00.123456Z",
     "feedback": { "correct": false, "actualLabel": "SIDEWALK", "createdAt": "2026-10-16T09:13:10.5Z" }
   }
@@ -242,7 +254,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 `curl`을 쓸 때 PowerShell은 JSON 안의 큰따옴표를 망가뜨리니, JSON을 파일로 저장해서 보내세요.
 
 ```powershell
-Set-Content -Encoding utf8 req.json '{"label":"CROSSWALK","confidence":0.92,"probabilities":{"CROSSWALK":0.92,"SIDEWALK":0.05,"HYDRANT":0.02,"NORMAL":0.01},"modelVersion":"v1"}'
+Set-Content -Encoding utf8 req.json '{"label":"CROSSWALK","confidence":0.92,"probabilities":{"CROSSWALK":0.92,"SIDEWALK":0.05,"HYDRANT":0.02,"NORMAL":0.01},"modelVersion":"deepseek-v4.1-flash"}'
 curl.exe -X POST http://localhost:8080/api/judgments -H "Content-Type: application/json" --data "@req.json"
 curl.exe http://localhost:8080/api/stats
 ```
@@ -254,7 +266,14 @@ curl.exe http://localhost:8080/api/stats
 기본 실행(개발용)에서는 H2 데이터베이스를 **파일**(`backend/data/illegalcar.mv.db`)로 저장해요.
 그래서 서버를 껐다 켜도 기록이 남아요. 기록을 모두 지우고 싶으면 서버를 끈 뒤 `backend/data` 폴더를 지우세요.
 
-1. 서버를 켠 상태에서 http://localhost:8080/h2-console 에 접속해요.
+> ⚠ H2 콘솔은 **기본으로 꺼져 있어요.** Cloudflare 터널처럼 서버를 인터넷에 공개하면
+> 누구나 DB 화면에 들어올 수 있어서 위험하기 때문이에요. **켤 때는 터널을 꼭 꺼 두세요.**
+
+1. 서버를 H2 콘솔을 켠 채로 실행해요.
+   ```powershell
+   .\gradlew.bat bootRun --args="--spring.h2.console.enabled=true"
+   ```
+   http://localhost:8080/h2-console 에 접속해요.
 2. 아래처럼 입력하고 Connect를 눌러요.
    - JDBC URL: `jdbc:h2:file:./data/illegalcar`
    - User Name: `sa`
@@ -347,7 +366,11 @@ src/main/java/com/hwanil/illegalcardetector/
 │  └─ dto/                          # 요청·응답 모양 (record)
 │     ├─ JudgmentRequest.java, ValidProbabilities.java, ProbabilitiesValidator.java (확률 검사)
 │     └─ JudgmentResponse.java, JudgmentSummary.java, FeedbackRequest.java
-├─ analyze/                         # /api/analyze: 사진 → NVIDIA Build AI 판별 (발표용 임시)
+├─ analyze/                         # /api/analyze: 사진 → 비전 LLM(NVIDIA Build) 판별
+│  ├─ AnalyzeController.java        # 파일 검사 (형식·크기)
+│  ├─ AnalyzeService.java           # 판별 흐름
+│  ├─ NvidiaVisionClient.java       # NVIDIA API 호출, 판별 프롬프트, 모델 설정
+│  └─ AnalysisParser.java           # AI 답에서 JSON 꺼내기·확률 보정
 ├─ stats/                           # /api/stats
 └─ health/HealthController.java     # /api/health
 src/main/resources/
@@ -363,4 +386,7 @@ src/main/resources/
   - 피드백 204·404, 500일 때 내부 메시지 숨김
 - `StatsQueryTest`(@DataJpaTest): 0건 유형 포함 집계, 피드백 정확도, 피드백 덮어쓰기
 - `GuideServiceTest`: 4개 유형 로딩, 유형이 빠지거나 필수 값이 비면 시작 실패
+- `AnalyzeControllerTest`(@WebMvcTest): 정상 판별 200, 사진이 아니면 400, AI 실패 502, 키 없음 503
+- `AnalysisParserTest`: 생각 과정·코드펜스 제거, 확률 채우기·정규화, label이 최댓값이 되게 보정, 잘못된 답은 실패
+- `NvidiaVisionClientTest`: 모델 이름 → 판별 기록용 `modelVersion` (회사 이름 빼기, 20자 제한)
 - `IllegalcardetectorApplicationTests`: 앱 전체 실행 (테스트용 메모리 DB 사용)

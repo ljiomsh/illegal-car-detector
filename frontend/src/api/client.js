@@ -80,7 +80,7 @@ function realGetStats() {
 // 외부 AI가 오래 걸릴 수 있어서 70초까지 기다려요. (서버는 NVIDIA를 60초까지 기다려요)
 const ANALYZE_TIMEOUT_MS = 70_000;
 
-// 사진을 서버(/api/analyze)로 보내 외부 AI 판별 결과를 받아요. (VITE_MODEL_MODE=api일 때 useModel이 써요)
+// 사진을 서버(/api/analyze)로 보내 AI 판별 결과를 받아요. (api/analyzePhoto.js가 써요)
 // → { label, confidence, probabilities, reason, modelVersion }
 export async function analyzeImage(imageBlob) {
   const formData = new FormData();

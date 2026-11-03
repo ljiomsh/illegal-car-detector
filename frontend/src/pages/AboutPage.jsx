@@ -1,17 +1,14 @@
 // 소개 화면 (/about): 서비스 목적, 작동 방식, 팀 소개, AI의 한계, 모델 정보
-import { EXTERNAL_AI_NOTICE, IS_API_MODE } from '../constants/aiMode.js';
+import { AI_MODEL_NAME, AI_PROVIDER, EXTERNAL_AI_NOTICE } from '../constants/aiInfo.js';
 import styles from './AboutPage.module.css';
 
 // 작동 방식 3단계
 const HOW_IT_WORKS = [
   { icon: '📷', title: '사진 찍기', text: '주차된 차와 주변이 함께 나오게 사진을 찍어요.' },
   {
-    icon: '📱',
-    // 외부 AI 모드에서는 사진이 외부 AI로 가니까 설명을 다르게 보여 줘요.
-    title: IS_API_MODE ? '외부 AI 분석' : '기기 안에서 AI 분석',
-    text: IS_API_MODE
-      ? '사진을 외부 AI(NVIDIA Build · DeepSeek V4.1 Flash)가 분석해요. 사진은 우리 서버에 저장하지 않아요.'
-      : '사진은 서버로 보내지 않고, 내 휴대폰 안에서 AI가 분석해요.',
+    icon: '🤖',
+    title: 'AI 분석',
+    text: `사진을 볼 수 있는 AI(${AI_PROVIDER} · ${AI_MODEL_NAME})가 우리가 정한 판별 기준에 따라 분석해요. 사진은 우리 서버에 저장하지 않아요.`,
   },
   {
     icon: '🧭',
@@ -30,9 +27,18 @@ const TEAM = [
 // AI의 한계
 const LIMITS = [
   '사진만으로는 거리를 정확히 잴 수 없어요. 예를 들어 소화전에서 5m 이내인지는 직접 확인해야 해요.',
-  'AI는 우리가 모은 학습 사진만큼만 알아요. 처음 보는 장소나 어두운 사진에서는 틀릴 수 있어요.',
+  'AI가 사진을 잘못 볼 수 있어요. 어둡거나 멀리서 찍은 사진, 차와 주변이 가려진 사진에서는 틀리기 쉬워요.',
+  '같은 사진이라도 분석할 때마다 확률이 조금씩 다를 수 있어요.',
   '표지판이나 노면 표시로 정해진 금지 구역은 AI가 알아보지 못할 수 있어요.',
   '최종 판단은 사람이 해요. 실제 위반 여부는 담당 기관이 판단해요.',
+];
+
+// AI 모델 정보
+const MODEL_INFO = [
+  { term: '모델', value: `${AI_MODEL_NAME} (${AI_PROVIDER})` },
+  { term: '종류', value: '사진을 볼 수 있는 대규모 언어 모델(비전 LLM)' },
+  { term: '판별 방법', value: '라벨링 기준서의 4가지 정의를 AI에게 알려 주고, 유형별 확률과 판단 근거를 받아요.' },
+  { term: '사진 저장', value: '저장하지 않아요 (판별 결과 숫자만 기록)' },
 ];
 
 export default function AboutPage() {
@@ -89,14 +95,12 @@ export default function AboutPage() {
           AI 모델 정보
         </h2>
         <dl className={styles.modelInfo}>
-          <div className={styles.modelRow}>
-            <dt>정확도</dt>
-            <dd>준비 중</dd>
-          </div>
-          <div className={styles.modelRow}>
-            <dt>학습 데이터 수</dt>
-            <dd>준비 중</dd>
-          </div>
+          {MODEL_INFO.map((row) => (
+            <div key={row.term} className={styles.modelRow}>
+              <dt>{row.term}</dt>
+              <dd>{row.value}</dd>
+            </div>
+          ))}
         </dl>
       </section>
 
@@ -116,11 +120,9 @@ export default function AboutPage() {
         <p className={styles.sub}>2026 AI동행 프로젝트 자율탐구 출품작</p>
       </section>
 
-      {IS_API_MODE && (
-        <p className={styles.sub}>
-          <span aria-hidden="true">🌐</span> {EXTERNAL_AI_NOTICE}
-        </p>
-      )}
+      <p className={styles.sub}>
+        <span aria-hidden="true">🌐</span> {EXTERNAL_AI_NOTICE}
+      </p>
     </div>
   );
 }

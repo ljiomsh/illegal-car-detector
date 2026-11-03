@@ -2,9 +2,9 @@
 // step 상태에 따라 화면이 바뀌어요: select → preview → analyzing → result → guide
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import useModel, { MODEL_VERSION } from '../hooks/useModel.js';
+import { analyzePhoto, isDemoMode } from '../api/analyzePhoto.js';
 import { postJudgment } from '../api/client.js';
-import { PRIVACY_NOTICE } from '../constants/aiMode.js';
+import { PRIVACY_NOTICE } from '../constants/aiInfo.js';
 import { buildGuideResponse } from '../mocks/guides.js';
 import { getConfidenceLevel, getViolationType, LABELS, toPercent } from '../constants/violationTypes.js';
 import { resizeImage } from '../utils/resizeImage.js';
@@ -40,12 +40,12 @@ function findSecondLabel(probabilities) {
 
 export default function CheckPage() {
   const navigate = useNavigate();
-  const { status: modelStatus, predict } = useModel();
+  const [isDemo] = useState(isDemoMode); // 주소에 ?mock=... 이 있으면 비상 시연 모드
 
   const [step, setStep] = useState('select');
   const [photoUrl, setPhotoUrl] = useState(null); // 줄인 사진의 임시 주소(blob:)
   const [isPreparing, setIsPreparing] = useState(false); // 사진 줄이는 중
-  const [prediction, setPrediction] = useState(null); // 모델 결과 { label, confidence, probabilities }
+  const [prediction, setPrediction] = useState(null); // AI 결과 { label, confidence, probabilities, reason, modelVersion }
   const [judgment, setJudgment] = useState(null); // 서버 응답(또는 fallback 안내)
   const [saveFailed, setSaveFailed] = useState(false); // 서버 저장 실패 여부
   const [feedbackSent, setFeedbackSent] = useState(false); // "판별이 틀렸어요"를 보냈는지
@@ -107,20 +107,20 @@ export default function CheckPage() {
     }
   }
 
-  // "판별하기": 모델로 분석 → 서버에 저장 → 결과 화면
+  // "판별하기": AI로 분석 → 서버에 저장 → 결과 화면
   async function handleAnalyze() {
-    if (!photoUrl || modelStatus !== 'ready') return;
+    if (!photoUrl) return;
 
     setErrorMessage('');
     setStep('analyzing');
 
     try {
       // 화면에 보이는 <img>는 CSS 때문에 크기가 줄거나 늘어날 수 있어서,
-      // 원래 비율 그대로인 새 <img>를 만들어 모델에 넘겨요.
+      // 원래 비율 그대로인 새 <img>를 만들어 AI에 보낼 사진을 만들어요.
       const img = new Image();
       img.src = photoUrl;
       await img.decode(); // 사진을 다 읽을 때까지 기다려요.
-      const result = await predict(img);
+      const result = await analyzePhoto(img);
       if (!isMountedRef.current) return;
 
       // 서버가 안 될 때를 대비해 기기 안의 안내 문구(fallback)를 먼저 만들어 둬요.
@@ -130,8 +130,8 @@ export default function CheckPage() {
       // 확신이 낮으면 결과를 보여 주지 않으니 기록에도 남기지 않아요.
       if (getConfidenceLevel(result.confidence) !== 'LOW') {
         try {
-          // 외부 AI는 서버가 알려 준 모델 버전을, mock은 mock 버전을 함께 저장해요.
-          response = await postJudgment({ ...result, modelVersion: result.modelVersion ?? MODEL_VERSION });
+          // 서버가 알려 준 모델 이름(비상 시연 모드는 'demo')을 함께 저장해요.
+          response = await postJudgment(result);
         } catch (error) {
           console.warn('판별 기록을 저장하지 못했어요. 기기 안의 안내를 보여 줄게요.', error);
           failed = true;
@@ -178,11 +178,7 @@ export default function CheckPage() {
       )}
 
       {step === 'select' && (
-        <SelectStep
-          modelStatus={modelStatus}
-          isPreparing={isPreparing}
-          onSelectFile={handleSelectFile}
-        />
+        <SelectStep isPreparing={isPreparing} onSelectFile={handleSelectFile} />
       )}
 
       {(step === 'preview' || step === 'analyzing') && (
@@ -194,19 +190,21 @@ export default function CheckPage() {
                 type="button"
                 className={`${btn.primary} ${btn.large}`}
                 onClick={handleAnalyze}
-                disabled={modelStatus !== 'ready'}
               >
-                {modelStatus === 'ready' && (analyzeFailed ? '다시 시도' : '판별하기')}
-                {modelStatus === 'loading' && 'AI 준비 중…'}
-                {modelStatus === 'error' && 'AI를 불러오지 못했어요'}
+                {analyzeFailed ? '다시 시도' : '판별하기'}
               </button>
               <button type="button" className={btn.secondary} onClick={resetToSelect}>
                 다시 찍기
               </button>
-              <ModelStatusMessage status={modelStatus} />
-              <p className={styles.privacy}>
-                <span aria-hidden="true">🔒</span> {PRIVACY_NOTICE}
-              </p>
+              {isDemo ? (
+                <p className={styles.status} role="status">
+                  <span aria-hidden="true">🧪</span> 비상 시연 모드예요. AI를 부르지 않고 정해진 결과를 보여 줘요.
+                </p>
+              ) : (
+                <p className={styles.privacy}>
+                  <span aria-hidden="true">🔒</span> {PRIVACY_NOTICE}
+                </p>
+              )}
             </div>
           )}
         </>
@@ -238,30 +236,8 @@ export default function CheckPage() {
   );
 }
 
-// AI 모델 준비 상태 안내 (준비 중 / 실패)
-function ModelStatusMessage({ status }) {
-  if (status === 'loading') {
-    return (
-      <p className={styles.status} role="status">
-        AI를 준비하고 있어요…
-      </p>
-    );
-  }
-  if (status === 'error') {
-    return (
-      <div className={styles.error} role="alert">
-        <p>AI를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.</p>
-        <button type="button" className={btn.secondary} onClick={() => window.location.reload()}>
-          새로고침
-        </button>
-      </div>
-    );
-  }
-  return null;
-}
-
 // 1단계: 사진 고르기
-function SelectStep({ modelStatus, isPreparing, onSelectFile }) {
+function SelectStep({ isPreparing, onSelectFile }) {
   return (
     <>
       <p className={styles.lead}>
@@ -273,7 +249,6 @@ function SelectStep({ modelStatus, isPreparing, onSelectFile }) {
           사진을 준비하고 있어요…
         </p>
       )}
-      <ModelStatusMessage status={modelStatus} />
     </>
   );
 }

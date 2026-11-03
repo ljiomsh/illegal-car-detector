@@ -21,20 +21,22 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * NVIDIA Build API(OpenAI 호환 chat/completions)에 사진을 보내서 판별 결과 글을 받아 와요.
+ * NVIDIA Build API(OpenAI 호환 chat/completions)의 비전 LLM에 사진을 보내서 판별 결과 글을 받아 와요.
+ * - 모델 이름·주소·응답 대기 시간은 application.yaml의 nvidia.* 에서 정해요.
  * - API 키(NVIDIA_API_KEY)는 backend/secrets.properties 파일이나 환경변수에서 읽어요.
  *   (application.yaml처럼 git에 올라가는 파일에는 절대 쓰지 마세요!)
  * - 사진·base64는 로그에 남기지 않아요.
- * - 타임아웃: 연결 10초, 응답 60초
+ * - 타임아웃: 연결 10초, 응답 nvidia.read-timeout (기본 60초)
  * - 빠른 응답을 위해 모델의 생각 과정(thinking)을 꺼요. (chat_template_kwargs)
  */
 @Slf4j
 @Component
 public class NvidiaVisionClient {
 
-	static final String MODEL = "deepseek-ai/deepseek-v4.1-flash";
+	/** 판별 기록의 modelVersion 최대 길이 (JudgmentRequest 검사와 같아요) */
+	static final int MAX_MODEL_VERSION_LENGTH = 20;
 
-	/** 판별 프롬프트 (기획에서 정한 문구 그대로) */
+	/** 판별 프롬프트 (라벨링 기준서의 정의를 그대로 옮겼어요) */
 	static final String PROMPT = """
 			너는 불법 주정차 판별 도우미야. 사진 속 주차된 차량의 위치를 보고 아래 4가지 중 하나로 분류해.
 			- CROSSWALK: 차체 일부라도 횡단보도 흰 줄 위에 있음 (정지선 뒤에 서 있으면 해당 안 됨)
@@ -48,21 +50,26 @@ public class NvidiaVisionClient {
 	private final JsonMapper jsonMapper;
 	private final String apiKey;
 	private final String baseUrl;
+	private final String model;
 	private final RestClient restClient;
 
 	// apiKey: secrets.properties 또는 환경변수의 NVIDIA_API_KEY (없으면 빈 값)
 	public NvidiaVisionClient(JsonMapper jsonMapper,
 			@Value("${nvidia.base-url:https://integrate.api.nvidia.com/v1}") String baseUrl,
+			@Value("${nvidia.model:deepseek-ai/deepseek-v4.1-flash}") String model,
+			@Value("${nvidia.read-timeout:60s}") Duration readTimeout,
 			@Value("${NVIDIA_API_KEY:}") String apiKey) {
 		this.jsonMapper = jsonMapper;
 		this.baseUrl = baseUrl;
+		this.model = model.trim();
 		this.apiKey = apiKey == null ? "" : apiKey.trim();
 
 		JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(
 				HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
-		requestFactory.setReadTimeout(Duration.ofSeconds(60));
+		requestFactory.setReadTimeout(readTimeout);
 		this.restClient = RestClient.builder().requestFactory(requestFactory).build();
 
+		log.info("사진 판별 AI: model={}, 응답 대기 {}초", this.model, readTimeout.toSeconds());
 		if (!isConfigured()) {
 			log.warn("NVIDIA_API_KEY가 없어요. backend/secrets.properties에 키를 넣거나 환경변수로 설정하세요. "
 					+ "그 전까지 /api/analyze는 503을 돌려줘요.");
@@ -75,6 +82,19 @@ public class NvidiaVisionClient {
 	}
 
 	/**
+	 * 판별 기록에 남길 모델 이름. 모델 이름에서 회사 이름(/ 앞)을 빼고 20자까지만 써요.
+	 * 예: deepseek-ai/deepseek-v4.1-flash → deepseek-v4.1-flash
+	 */
+	public String modelVersion() {
+		return toModelVersion(model);
+	}
+
+	static String toModelVersion(String model) {
+		String name = model.substring(model.lastIndexOf('/') + 1).replaceAll("[^A-Za-z0-9.-]", "-");
+		return name.length() > MAX_MODEL_VERSION_LENGTH ? name.substring(0, MAX_MODEL_VERSION_LENGTH) : name;
+	}
+
+	/**
 	 * 사진을 보내고 AI의 답(choices[0].message.content)을 돌려줘요.
 	 * 추론 과정(reasoning_content 등)은 쓰지 않아요. 실패하면 AiUnavailableException
 	 */
@@ -82,7 +102,7 @@ public class NvidiaVisionClient {
 		String dataUrl = "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(image);
 
 		Map<String, Object> body = Map.of(
-				"model", MODEL,
+				"model", model,
 				"messages", List.of(Map.of(
 						"role", "user",
 						"content", List.of(

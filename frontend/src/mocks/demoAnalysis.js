@@ -1,14 +1,18 @@
-// 가짜(mock) AI 모델이에요. 진짜 Teachable Machine 모델이 준비되기 전까지 사용해요.
+// 비상 시연 모드예요. AI를 부르지 않고 정해진 판별 결과를 만들어요.
+// 발표 중 인터넷이나 AI가 안 될 때, 그리고 결과 화면을 개발·확인할 때 써요. (api/analyzePhoto.js)
 //
-// 개발 테스트용 주소 옵션 (?mock=...)
+// 주소 옵션 (?mock=...)
 //   /check?mock=CROSSWALK  → 횡단보도가 0.9로 나와요 (SIDEWALK, HYDRANT, NORMAL도 가능)
 //   /check?mock=MEDIUM     → 최고 확률 0.55 (확신 보통)
 //   /check?mock=LOW        → 최고 확률 0.35 (확신 낮음)
-//   옵션이 없으면 랜덤 결과가 나와요.
+//   값이 없으면(?mock) 랜덤 결과가 나와요.
 
 import { LABELS } from '../constants/violationTypes';
 
-export const MOCK_MODEL_VERSION = 'mock-0.1';
+// 판별 기록에 함께 저장하는 모델 이름 (진짜 AI 결과와 구분돼요)
+export const DEMO_MODEL_VERSION = 'demo';
+
+const DEMO_REASON = '비상 시연 모드라서 AI가 사진을 보지 않고 정해진 결과를 보여 줘요.';
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -80,22 +84,16 @@ function findTopLabel(probabilities) {
   );
 }
 
-// 모델 불러오기 흉내: 0.8초 뒤에 predict 함수를 가진 모델 객체를 돌려줘요.
-export async function loadMockModel() {
-  await delay(800);
-
+// 분석하는 것처럼 1~1.5초 기다린 뒤, 진짜 AI 결과와 같은 모양으로 돌려줘요.
+export async function analyzeDemo() {
+  await delay(1000 + Math.random() * 500);
+  const probabilities = makeProbabilities(getMockOption());
+  const label = findTopLabel(probabilities);
   return {
-    version: MOCK_MODEL_VERSION,
-    // 진짜 모델과 모양을 맞추려고 사진(img 요소)을 받기만 하고 쓰지는 않아요.
-    async predict(_imgElement) {
-      await delay(600 + Math.random() * 400);
-      const probabilities = makeProbabilities(getMockOption());
-      const label = findTopLabel(probabilities);
-      return {
-        label,
-        confidence: probabilities[label],
-        probabilities,
-      };
-    },
+    label,
+    confidence: probabilities[label],
+    probabilities,
+    reason: DEMO_REASON,
+    modelVersion: DEMO_MODEL_VERSION,
   };
 }

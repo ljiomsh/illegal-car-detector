@@ -80,6 +80,7 @@
 }
 
 .modelRow dt {
+  flex-shrink: 0; /* 설명이 길어도 "판별 방법" 같은 제목은 한 줄로 */
   font-weight: 600;
 }
 

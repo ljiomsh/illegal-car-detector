@@ -5,13 +5,22 @@
 | 폴더 | 내용 | 설명서 |
 |---|---|---|
 | `frontend/` | React + Vite 화면 | [frontend/README.md](frontend/README.md) |
-| `backend/` | Spring Boot 서버 (판별 기록, 통계, AI 사진 판별) | [backend/README.md](backend/README.md) |
+| `backend/` | Spring Boot 서버 (AI 사진 판별, 판별 기록, 통계) | [backend/README.md](backend/README.md) |
+
+## AI 판별 방식
+
+사진을 서버(`/api/analyze`)로 보내면, 서버가 **사진을 볼 수 있는 대규모 언어 모델(비전 LLM)** 에 판별을 맡겨요.
+- 모델: NVIDIA Build의 **DeepSeek V4.1 Flash** (`backend/src/main/resources/application.yaml`의 `nvidia.model`에서 바꿀 수 있어요)
+- 판별 기준: 기획서의 라벨링 기준서(횡단보도 위 / 인도 위 / 소화전 주변 / 정상 주차) 정의를 프롬프트로 알려 줘요.
+- AI는 유형별 확률과 판단 근거(한두 문장)를 JSON으로 답하고, 서버가 값을 검사·보정해서 화면에 보내요.
+- 사진은 우리 서버에 저장하지 않아요. 판별 결과 숫자만 기록해요.
+
+직접 사진을 모아 모델을 학습하는 방식도 검토했지만, 사진 수집에 시간이 많이 들어서 비전 LLM 방식으로 정했어요.
 
 ---
 
-## 발표용 실행 방법 (Windows) — 외부 AI(NVIDIA Build · DeepSeek V4.1 Flash) 판별
+## 실행 방법 (Windows)
 
-현재 버전은 사진을 서버(`/api/analyze`)로 보내고, 서버가 NVIDIA Build API로 판별을 맡겨요.
 **API 키는 git에 올라가지 않는 곳(아래 두 방법 중 하나)에만 넣어요.**
 
 ### 1) 백엔드 켜기 (터미널 1)
@@ -45,13 +54,12 @@ $env:NVIDIA_API_KEY="키값"
 
 ### 2) 프론트 켜기 (터미널 2)
 
-`frontend/.env.development.local`에 아래 두 줄이 있어야 해요. (이미 만들어 두었어요. git에 올라가지 않아요)
+`frontend/.env.development.local`에 아래 줄이 있어야 해요. (이미 만들어 두었어요. git에 올라가지 않아요)
 ```
-VITE_MODEL_MODE=api
 VITE_USE_MOCK=false
 ```
-- `VITE_MODEL_MODE=api` → 사진 판별을 외부 AI로
-- `VITE_USE_MOCK=false` → 판별 기록·통계를 진짜 서버에 저장
+- `VITE_USE_MOCK=false` → 판별 기록·통계를 진짜 서버에 저장 (없으면 브라우저 안의 가짜 서버에 저장)
+- 사진 판별은 설정과 상관없이 언제나 서버의 AI가 해요.
 
 ```powershell
 cd frontend
@@ -59,9 +67,10 @@ npm run dev
 ```
 → 터미널에 나온 주소(http://localhost:5173)로 접속해요.
 
-### 3) 비상용: 인터넷이나 AI가 안 될 때
+### 3) 비상 시연 모드: 인터넷이나 AI가 안 될 때
 
-주소 끝에 `?mock=...`을 붙이면 **설정과 상관없이** 가짜(mock) 판별을 써요. (외부 AI를 부르지 않아요)
+주소 끝에 `?mock=...`을 붙이면 AI를 부르지 않고 정해진 결과를 보여 줘요.
+화면에 "비상 시연 모드예요"라고 표시되고, 기록에는 모델 이름이 `demo`로 남아요.
 
 | 주소 | 결과 |
 |---|---|
@@ -70,7 +79,7 @@ npm run dev
 | `http://localhost:5173/check?mock=LOW` | 다시 찍기 안내 화면 |
 
 ### 알아 두기
-- 외부 AI 분석은 보통 수 초~수십 초 걸리고, 최대 1분까지 기다려요. (서버 60초, 화면 70초 제한)
+- AI 분석은 보통 수 초~수십 초 걸리고, 최대 1분까지 기다려요. (서버 60초 `nvidia.read-timeout`, 화면 70초 제한)
 - AI가 실패하면 "AI 분석에 실패했어요. 다시 시도해 주세요."와 **다시 시도** 버튼이 나와요.
 - 사진은 우리 서버에 저장하지 않고, 로그에도 남기지 않아요. 다만 분석을 위해 NVIDIA로 보내지니
   **번호판·얼굴이 보이지 않는 사진**을 써 주세요.

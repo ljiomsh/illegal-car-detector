@@ -1,7 +1,7 @@
 // 홈 화면 (/): 서비스 소개 + 시작 버튼 + 4가지 유형 + 개인정보 안내
 import { Link } from 'react-router';
 import { getViolationType, LABELS } from '../constants/violationTypes';
-import { PRIVACY_NOTICE } from '../constants/aiMode.js';
+import { PRIVACY_NOTICE } from '../constants/aiInfo.js';
 import btn from '../styles/buttons.module.css';
 import styles from './HomePage.module.css';
 
