@@ -40,6 +40,9 @@
 
 /* 앱으로만 신고할 수 있다는 안내 */
 .note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--color-primary-soft);

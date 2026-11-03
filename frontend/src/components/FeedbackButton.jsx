@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { postFeedback } from '../api/client';
 import { getViolationType, LABELS } from '../constants/violationTypes';
+import Icon from './Icon.jsx';
 import btn from '../styles/buttons.module.css';
 import styles from './FeedbackButton.module.css';
 
@@ -42,7 +43,7 @@ export default function FeedbackButton({ judgmentId, predictedLabel, sent = fals
   if (sent || state === 'done') {
     return (
       <p ref={thanksRef} tabIndex={-1} className={styles.thanks} role="status">
-        <span aria-hidden="true">🙏</span> 알려줘서 고마워요! AI를 더 똑똑하게 만드는 데 쓸게요.
+        <Icon name="heart" size={18} /> 알려줘서 고마워요! AI를 더 똑똑하게 만드는 데 쓸게요.
       </p>
     );
   }
@@ -55,7 +56,7 @@ export default function FeedbackButton({ judgmentId, predictedLabel, sent = fals
         className={btn.text}
         onClick={() => setState('choosing')}
       >
-        판별이 틀렸어요
+        <Icon name="message" size={18} /> 판별이 틀렸어요
       </button>
     );
   }
@@ -76,7 +77,7 @@ export default function FeedbackButton({ judgmentId, predictedLabel, sent = fals
               className={btn.secondary}
               onClick={() => sendFeedback(label)}
             >
-              <span aria-hidden="true">{type.icon}</span> {type.title}
+              <Icon name={type.icon} /> {type.title}
             </button>
           );
         })}

@@ -8,6 +8,17 @@
   line-height: 1.6;
 }
 
+/* 아이콘은 첫 줄에 붙이고, 글이 길어지면 아이콘 오른쪽으로 줄이 이어져요. */
+.line {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.line > svg {
+  margin-top: 3px;
+}
+
 .external {
   margin-top: var(--space-2);
   padding-top: var(--space-2);

@@ -3,6 +3,7 @@
 // onCancel(): 카메라를 닫아요.
 // onFallback(): 카메라를 쓸 수 없을 때 기기의 기본 카메라 앱(파일 선택)으로 넘어가요.
 import { useEffect, useRef, useState } from 'react';
+import Icon from './Icon.jsx';
 import btn from '../styles/buttons.module.css';
 import styles from './CameraCapture.module.css';
 
@@ -99,10 +100,10 @@ export default function CameraCapture({ onCapture, onCancel, onFallback }) {
           카메라
         </h2>
         <p className={styles.error} role="alert">
-          <span aria-hidden="true">⚠️</span> {errorMessage}
+          <Icon name="alert" size={18} /> {errorMessage}
         </p>
         <button type="button" className={btn.primary} onClick={onFallback}>
-          <span aria-hidden="true">📱</span> 기기 카메라 앱으로 찍기
+          <Icon name="smartphone" /> 기기 카메라 앱으로 찍기
         </button>
         <button type="button" className={btn.secondary} onClick={onCancel}>
           닫기
@@ -141,7 +142,7 @@ export default function CameraCapture({ onCapture, onCancel, onFallback }) {
         onClick={handleShoot}
         disabled={status !== 'ready'}
       >
-        <span aria-hidden="true">📸</span> 촬영하기
+        <Icon name="camera" /> 촬영하기
       </button>
       <button type="button" className={btn.secondary} onClick={onCancel}>
         취소

@@ -5,14 +5,15 @@ import HomePage from './pages/HomePage.jsx';
 import CheckPage from './pages/CheckPage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
+import Icon from './components/Icon.jsx';
 import styles from './App.module.css';
 
-// 아래 탭 메뉴 목록
+// 아래 탭 메뉴 목록 (icon: components/Icon.jsx의 아이콘 이름)
 const TABS = [
-  { to: '/', icon: '🏠', label: '홈' },
-  { to: '/check', icon: '📷', label: '판별' },
-  { to: '/history', icon: '📋', label: '기록' },
-  { to: '/about', icon: 'ℹ️', label: '소개' },
+  { to: '/', icon: 'home', label: '홈' },
+  { to: '/check', icon: 'camera', label: '판별' },
+  { to: '/history', icon: 'clipboard', label: '기록' },
+  { to: '/about', icon: 'info', label: '소개' },
 ];
 
 export default function App() {
@@ -37,7 +38,7 @@ export default function App() {
 
       <header className={styles.header}>
         <Link to="/" className={styles.logo}>
-          <span aria-hidden="true">🚗</span> 불법 주정차 판별·신고 도우미
+          <Icon name="car" /> 불법 주정차 판별·신고 도우미
         </Link>
       </header>
 
@@ -62,9 +63,7 @@ export default function App() {
                   isActive ? `${styles.tab} ${styles.tabActive}` : styles.tab
                 }
               >
-                <span className={styles.tabIcon} aria-hidden="true">
-                  {tab.icon}
-                </span>
+                <Icon name={tab.icon} size={22} />
                 <span>{tab.label}</span>
               </NavLink>
             </li>

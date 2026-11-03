@@ -4,6 +4,7 @@
 import { useRef, useState } from 'react';
 import CameraCapture from './CameraCapture.jsx';
 import PhotoTips from './PhotoTips.jsx';
+import Icon from './Icon.jsx';
 import btn from '../styles/buttons.module.css';
 import styles from './PhotoPicker.module.css';
 
@@ -71,7 +72,7 @@ export default function PhotoPicker({ onSelect, disabled = false }) {
             onClick={openCamera}
             disabled={disabled}
           >
-            <span aria-hidden="true">📷</span> 사진 찍기
+            <Icon name="camera" /> 사진 찍기
           </button>
           <button
             type="button"
@@ -79,7 +80,7 @@ export default function PhotoPicker({ onSelect, disabled = false }) {
             onClick={() => galleryInputRef.current?.click()}
             disabled={disabled}
           >
-            <span aria-hidden="true">🖼</span> 갤러리에서 고르기
+            <Icon name="image" /> 갤러리에서 고르기
           </button>
         </div>
       )}

@@ -7,47 +7,50 @@
 
 .title {
   margin-bottom: var(--space-3);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-lg);
   font-weight: 800;
 }
 
 .list {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   list-style: none;
 }
 
-.rowHead {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-1);
+/* 이름 | 막대 | % 를 한 줄에 */
+.row {
+  display: grid;
+  grid-template-columns: 4.5em minmax(0, 1fr) 2.75em;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-sub);
   font-size: var(--font-size-sm);
 }
 
-.name {
-  color: var(--color-text-sub);
-}
-
-.nameTop {
+.top {
   color: var(--color-text);
   font-weight: 800;
 }
 
-.percent {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.name {
+  white-space: nowrap;
 }
 
 .track {
-  height: 10px;
+  height: 8px;
   overflow: hidden;
   border-radius: var(--radius-full);
   background: var(--color-track);
 }
 
 .bar {
+  display: block;
   height: 100%;
   border-radius: var(--radius-full);
   transition: width 0.5s ease-out;
+}
+
+.percent {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }

@@ -1,5 +1,6 @@
 // 판별 유형(라벨)별 한글 이름·아이콘·색상을 모아 둔 곳이에요.
-// 아이콘을 나중에 SVG로 바꾸고 싶으면 이 파일의 icon 값만 바꾸면 돼요.
+// icon은 components/Icon.jsx의 아이콘 이름이에요. (<Icon name={type.icon} />)
+// chartColor는 기록 화면의 유형별 막대 색이에요. (서로 밝기가 달라서 색약이어도 구분돼요)
 
 // AI 모델이 내놓는 라벨 4가지 (순서 = 화면에 보여 주는 기본 순서)
 export const LABELS = ['CROSSWALK', 'SIDEWALK', 'HYDRANT', 'NORMAL'];
@@ -9,8 +10,9 @@ export const VIOLATION_TYPES = {
     label: 'CROSSWALK',
     name: '횡단보도',
     title: '횡단보도 위 주정차',
-    icon: '🚸',
-    description: '횡단보도 위에 차가 서 있어요',
+    icon: 'crosswalk',
+    chartColor: '#1e3a8a',
+    description: '횡단보도 흰 줄 위에 차가 서 있어요',
     violation: true,
     color: 'var(--color-danger)',
     textColor: 'var(--color-danger-text)',
@@ -20,8 +22,9 @@ export const VIOLATION_TYPES = {
     label: 'SIDEWALK',
     name: '인도',
     title: '인도 위 주정차',
-    icon: '🚶',
-    description: '사람이 걷는 인도 위에 차가 서 있어요',
+    icon: 'sidewalk',
+    chartColor: '#6b8be0',
+    description: '바퀴가 보도 위에 올라가 있어요',
     violation: true,
     color: 'var(--color-danger)',
     textColor: 'var(--color-danger-text)',
@@ -31,8 +34,9 @@ export const VIOLATION_TYPES = {
     label: 'HYDRANT',
     name: '소화전',
     title: '소화전 주변 주정차',
-    icon: '🧯',
-    description: '소화전 가까이에 차가 서 있어요',
+    icon: 'hydrant',
+    chartColor: '#f76b15',
+    description: '소화전 가까이(약 5m 이내)에 서 있어요',
     violation: true,
     color: 'var(--color-danger)',
     textColor: 'var(--color-danger-text)',
@@ -42,7 +46,8 @@ export const VIOLATION_TYPES = {
     label: 'NORMAL',
     name: '정상 주차',
     title: '정상 주차',
-    icon: '✅',
+    icon: 'parking',
+    chartColor: '#30a46c',
     description: '금지 구역이 아닌 곳에 세운 차예요',
     violation: false,
     color: 'var(--color-safe)',
@@ -58,7 +63,8 @@ export function getViolationType(label) {
       label,
       name: '알 수 없음',
       title: '알 수 없는 유형',
-      icon: '❔',
+      icon: 'help',
+      chartColor: 'var(--color-border-strong)',
       description: '',
       violation: false,
       color: 'var(--color-border-strong)',

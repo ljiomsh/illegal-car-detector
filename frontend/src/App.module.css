@@ -81,7 +81,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-1);
   min-height: var(--tabbar-height);
   color: var(--color-text-sub);
   font-size: var(--font-size-xs);
@@ -92,11 +92,6 @@
 
 .tab:hover {
   background: var(--color-bg);
-}
-
-.tabIcon {
-  font-size: 1.375rem;
-  line-height: 1;
 }
 
 /* 지금 보고 있는 탭: 색 + 굵기 + 위쪽 막대로 표시 */

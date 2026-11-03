@@ -1,17 +1,18 @@
 // 판별 화면 (/check)
 // step 상태에 따라 화면이 바뀌어요: select → preview → analyzing → result → guide
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { analyzePhoto, isDemoMode } from '../api/analyzePhoto.js';
 import { postJudgment } from '../api/client.js';
 import { PRIVACY_NOTICE } from '../constants/aiInfo.js';
 import { buildGuideResponse } from '../mocks/guides.js';
-import { getConfidenceLevel, getViolationType, LABELS, toPercent } from '../constants/violationTypes.js';
+import { getConfidenceLevel, getViolationType } from '../constants/violationTypes.js';
 import { resizeImage } from '../utils/resizeImage.js';
+import Icon from '../components/Icon.jsx';
 import PhotoPicker from '../components/PhotoPicker.jsx';
 import PhotoPreview from '../components/PhotoPreview.jsx';
 import PhotoTips from '../components/PhotoTips.jsx';
-import ResultCard from '../components/ResultCard.jsx';
+import AnalyzingProgress from '../components/AnalyzingProgress.jsx';
+import ResultCard, { DangerReasons } from '../components/ResultCard.jsx';
 import ProbabilityBars from '../components/ProbabilityBars.jsx';
 import Checklist from '../components/Checklist.jsx';
 import ReportGuide from '../components/ReportGuide.jsx';
@@ -29,22 +30,14 @@ const STEP_TITLES = {
   guide: '신고 방법',
 };
 
-// 2위 확률이 이 값 이상이면 "○○에도 해당될 수 있어요"를 보여 줘요.
-const SECOND_CANDIDATE_MIN = 0.3;
-
-// 확률이 두 번째로 높은 라벨을 찾아요.
-function findSecondLabel(probabilities) {
-  const sorted = [...LABELS].sort((a, b) => (probabilities[b] ?? 0) - (probabilities[a] ?? 0));
-  return sorted[1];
-}
-
 export default function CheckPage() {
-  const navigate = useNavigate();
   const [isDemo] = useState(isDemoMode); // 주소에 ?mock=... 이 있으면 비상 시연 모드
 
   const [step, setStep] = useState('select');
   const [photoUrl, setPhotoUrl] = useState(null); // 줄인 사진의 임시 주소(blob:)
   const [isPreparing, setIsPreparing] = useState(false); // 사진 줄이는 중
+  const [phase, setPhase] = useState('prepare'); // 분석 진행 단계: prepare → analyze → save
+  const [analyzeStartedAt, setAnalyzeStartedAt] = useState(0); // 분석 시작 시각 (지난 시간 표시용)
   const [prediction, setPrediction] = useState(null); // AI 결과 { label, confidence, probabilities, reason, modelVersion }
   const [judgment, setJudgment] = useState(null); // 서버 응답(또는 fallback 안내)
   const [saveFailed, setSaveFailed] = useState(false); // 서버 저장 실패 여부
@@ -56,11 +49,13 @@ export default function CheckPage() {
   const headingRef = useRef(null); // 단계가 바뀌면 제목으로 포커스를 옮겨요
   const prevStepRef = useRef(step);
   const isMountedRef = useRef(false); // 화면을 벗어난 뒤에는 상태를 바꾸지 않으려고
+  const abortRef = useRef(null); // 분석 "취소"용 AbortController
 
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      abortRef.current?.abort(); // 화면을 벗어나면 진행 중인 분석도 멈춰요.
     };
   }, []);
 
@@ -111,7 +106,11 @@ export default function CheckPage() {
   async function handleAnalyze() {
     if (!photoUrl) return;
 
+    const controller = new AbortController();
+    abortRef.current = controller;
     setErrorMessage('');
+    setPhase('prepare');
+    setAnalyzeStartedAt(Date.now());
     setStep('analyzing');
 
     try {
@@ -120,7 +119,10 @@ export default function CheckPage() {
       const img = new Image();
       img.src = photoUrl;
       await img.decode(); // 사진을 다 읽을 때까지 기다려요.
-      const result = await analyzePhoto(img);
+      const result = await analyzePhoto(img, {
+        signal: controller.signal,
+        onPhase: (next) => isMountedRef.current && setPhase(next),
+      });
       if (!isMountedRef.current) return;
 
       // 서버가 안 될 때를 대비해 기기 안의 안내 문구(fallback)를 먼저 만들어 둬요.
@@ -129,6 +131,7 @@ export default function CheckPage() {
 
       // 확신이 낮으면 결과를 보여 주지 않으니 기록에도 남기지 않아요.
       if (getConfidenceLevel(result.confidence) !== 'LOW') {
+        setPhase('save');
         try {
           // 서버가 알려 준 모델 이름(비상 시연 모드는 'demo')을 함께 저장해요.
           response = await postJudgment(result);
@@ -145,8 +148,13 @@ export default function CheckPage() {
       setAnalyzeFailed(false);
       setStep('result');
     } catch (error) {
-      console.error('분석 중 오류:', error);
       if (!isMountedRef.current) return;
+      // "취소"를 눌렀으면 조용히 미리보기로 돌아가요.
+      if (error.code === 'CANCELLED') {
+        setStep('preview');
+        return;
+      }
+      console.error('분석 중 오류:', error);
       // 서버가 { code, message }로 이유를 알려 줬으면(400·502·503 등) 그 안내를 그대로 보여 줘요.
       // 서버에 닿지 못했거나 시간이 초과되면 기본 안내를 보여 줘요.
       setErrorMessage(
@@ -156,12 +164,20 @@ export default function CheckPage() {
       );
       setAnalyzeFailed(true);
       setStep('preview');
+    } finally {
+      if (abortRef.current === controller) abortRef.current = null;
     }
   }
 
   return (
     <div className={styles.page}>
       <title>판별하기 | 불법 주정차 판별·신고 도우미</title>
+
+      {step === 'guide' && (
+        <button type="button" className={styles.backLink} onClick={() => setStep('result')}>
+          <Icon name="chevronLeft" size={18} /> 결과로
+        </button>
+      )}
 
       {/* key={step}: 단계마다 새 제목을 만들어서 스크린리더가 확실히 읽게 해요. */}
       <h1 key={step} ref={headingRef} tabIndex={-1} className={styles.heading}>
@@ -170,10 +186,8 @@ export default function CheckPage() {
 
       {errorMessage && (
         <p className={styles.error} role="alert">
-          {/* 아이콘과 글자가 한 줄로 붙어 있게 하나의 span으로 감싸요. */}
-          <span>
-            <span aria-hidden="true">⚠️</span> {errorMessage}
-          </span>
+          <Icon name="alert" size={18} />
+          <span>{errorMessage}</span>
         </p>
       )}
 
@@ -181,32 +195,41 @@ export default function CheckPage() {
         <SelectStep isPreparing={isPreparing} onSelectFile={handleSelectFile} />
       )}
 
-      {(step === 'preview' || step === 'analyzing') && (
+      {step === 'preview' && (
         <>
-          <PhotoPreview src={photoUrl} analyzing={step === 'analyzing'} />
-          {step === 'preview' && (
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={`${btn.primary} ${btn.large}`}
-                onClick={handleAnalyze}
-              >
-                {analyzeFailed ? '다시 시도' : '판별하기'}
-              </button>
-              <button type="button" className={btn.secondary} onClick={resetToSelect}>
-                다시 찍기
-              </button>
-              {isDemo ? (
-                <p className={styles.status} role="status">
-                  <span aria-hidden="true">🧪</span> 비상 시연 모드예요. AI를 부르지 않고 정해진 결과를 보여 줘요.
-                </p>
-              ) : (
-                <p className={styles.privacy}>
-                  <span aria-hidden="true">🔒</span> {PRIVACY_NOTICE}
-                </p>
-              )}
-            </div>
-          )}
+          <PhotoPreview src={photoUrl} />
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={`${btn.primary} ${btn.large}`}
+              onClick={handleAnalyze}
+            >
+              {analyzeFailed ? '다시 시도' : '판별하기'}
+            </button>
+            <button type="button" className={btn.secondary} onClick={resetToSelect}>
+              다시 찍기
+            </button>
+            {isDemo ? (
+              <p className={styles.status} role="status">
+                <Icon name="flask" size={16} /> 비상 시연 모드예요. AI를 부르지 않고 정해진 결과를 보여 줘요.
+              </p>
+            ) : (
+              <p className={styles.privacy}>
+                <Icon name="lock" size={16} /> {PRIVACY_NOTICE}
+              </p>
+            )}
+          </div>
+        </>
+      )}
+
+      {step === 'analyzing' && (
+        <>
+          <PhotoPreview src={photoUrl} analyzing />
+          <AnalyzingProgress
+            phase={phase}
+            startedAt={analyzeStartedAt}
+            onCancel={() => abortRef.current?.abort()}
+          />
         </>
       )}
 
@@ -224,13 +247,7 @@ export default function CheckPage() {
       )}
 
       {step === 'guide' && judgment && (
-        <GuideStep
-          judgment={judgment}
-          checkedIds={checkedIds}
-          onChangeChecked={setCheckedIds}
-          onBack={() => setStep('result')}
-          onHome={() => navigate('/')}
-        />
+        <GuideStep judgment={judgment} checkedIds={checkedIds} onChangeChecked={setCheckedIds} />
       )}
     </div>
   );
@@ -264,16 +281,14 @@ function ResultStep({
   onShowGuide,
   onRetake,
 }) {
-  const level = judgment.confidenceLevel;
-
   // LOW: 결과 대신 다시 찍기 안내
-  if (level === 'LOW') {
+  if (judgment.confidenceLevel === 'LOW') {
     return (
       <>
-        <PhotoPreview src={photoUrl} compact />
+        <PhotoPreview src={photoUrl} />
         <section className={styles.lowCard} aria-labelledby="low-title">
           <h2 id="low-title" className={styles.lowTitle}>
-            <span aria-hidden="true">🤔</span> AI가 사진을 잘 알아보지 못했어요
+            <Icon name="help" size={22} /> AI가 사진을 잘 알아보지 못했어요
           </h2>
           <p>판별 결과를 믿기 어려워서 보여 드리지 않을게요. 아래 요령대로 다시 찍어 주세요.</p>
         </section>
@@ -287,41 +302,10 @@ function ResultStep({
   }
 
   // HIGH / MEDIUM
-  const secondLabel = findSecondLabel(prediction.probabilities);
-  const secondProbability = prediction.probabilities[secondLabel] ?? 0;
-  const secondType = getViolationType(secondLabel);
-
   return (
     <>
-      <PhotoPreview src={photoUrl} compact />
-
-      {level === 'MEDIUM' && (
-        <p className={styles.warning} role="note">
-          <span aria-hidden="true">⚠️</span> AI가 확신하지 못해요. 다른 각도에서 다시 찍어보세요.
-        </p>
-      )}
-
-      <ResultCard judgment={judgment} confidence={prediction.confidence} />
-
-      {prediction.reason && (
-        <section className={styles.reasonCard} aria-labelledby="ai-reason-title">
-          <h2 id="ai-reason-title" className={styles.reasonTitle}>
-            <span aria-hidden="true">🤖</span> AI 판단 근거
-          </h2>
-          <p>{prediction.reason}</p>
-        </section>
-      )}
-
-      {secondProbability >= SECOND_CANDIDATE_MIN && (
-        <p className={styles.notice}>
-          <span aria-hidden="true">{secondType.icon}</span>{' '}
-          {secondLabel === 'NORMAL'
-            ? '정상 주차일 가능성도 있어요'
-            : `${secondType.title}에도 해당될 수 있어요`}{' '}
-          ({toPercent(secondProbability)}%)
-        </p>
-      )}
-
+      <ResultCard judgment={judgment} prediction={prediction} photoUrl={photoUrl} />
+      <DangerReasons judgment={judgment} />
       <ProbabilityBars probabilities={prediction.probabilities} topLabel={prediction.label} />
 
       {saveFailed && (
@@ -330,23 +314,6 @@ function ResultStep({
           보여 드려요.
         </p>
       )}
-
-      <div className={styles.actions}>
-        {judgment.violation ? (
-          <>
-            <button type="button" className={`${btn.primary} ${btn.large}`} onClick={onShowGuide}>
-              신고 방법 보기
-            </button>
-            <button type="button" className={btn.secondary} onClick={onRetake}>
-              다른 사진으로 다시 하기
-            </button>
-          </>
-        ) : (
-          <button type="button" className={`${btn.primary} ${btn.large}`} onClick={onRetake}>
-            다른 사진 확인하기
-          </button>
-        )}
-      </div>
 
       {judgment.judgmentId != null && (
         <div className={styles.feedback}>
@@ -360,30 +327,79 @@ function ResultStep({
       )}
 
       <Disclaimer />
+
+      {/* 스크롤해도 화면 아래에 붙어 있는 버튼 막대 */}
+      <div className={styles.stickyBar}>
+        {judgment.violation ? (
+          <>
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={onRetake}
+              aria-label="다른 사진으로 다시 하기"
+            >
+              <Icon name="rotate" size={22} />
+            </button>
+            <button type="button" className={`${btn.primary} ${btn.large}`} onClick={onShowGuide}>
+              신고 방법 보기 <Icon name="chevronRight" size={18} />
+            </button>
+          </>
+        ) : (
+          <button type="button" className={`${btn.primary} ${btn.large}`} onClick={onRetake}>
+            다른 사진 확인하기
+          </button>
+        )}
+      </div>
     </>
   );
 }
 
-// 5단계: 신고 가이드
-function GuideStep({ judgment, checkedIds, onChangeChecked, onBack, onHome }) {
+// 5단계: 신고 가이드 (① 요건 확인하기 → ② 안전신문고에 신고)
+function GuideStep({ judgment, checkedIds, onChangeChecked }) {
   const type = getViolationType(judgment.type);
+  const items = judgment.checklist ?? [];
+  const remaining = items.filter((item) => !checkedIds.includes(item.id)).length;
+  const ready = remaining === 0;
 
   return (
     <>
-      <p className={styles.typeSummary}>
-        <span aria-hidden="true">{type.icon}</span> {judgment.title}
+      <p className={styles.typeChip} style={{ '--type-soft': type.softColor, '--type-text': type.textColor }}>
+        <Icon name={type.icon} size={16} /> {judgment.title}
       </p>
-      <Checklist items={judgment.checklist} checkedIds={checkedIds} onChange={onChangeChecked} />
-      <ReportGuide steps={judgment.reportSteps} reportUrl={judgment.reportUrl} />
-      <div className={styles.actions}>
-        <button type="button" className={btn.secondary} onClick={onBack}>
-          결과 다시 보기
-        </button>
-        <button type="button" className={btn.secondary} onClick={onHome}>
-          처음으로
-        </button>
-      </div>
+
+      <ol className={styles.stepper} aria-label="진행 단계">
+        <li className={ready ? styles.stepDone : styles.stepCurrent} aria-current={ready ? undefined : 'step'}>
+          <span className={styles.stepNumber} aria-hidden="true">
+            {ready ? <Icon name="check" size={14} strokeWidth={3} /> : 1}
+          </span>
+          요건 확인하기
+        </li>
+        <li className={ready ? styles.stepCurrent : styles.stepTodo} aria-current={ready ? 'step' : undefined}>
+          <span className={styles.stepNumber} aria-hidden="true">
+            2
+          </span>
+          안전신문고에 신고
+        </li>
+      </ol>
+
+      <Checklist items={items} checkedIds={checkedIds} onChange={onChangeChecked} />
+      <ReportGuide steps={judgment.reportSteps} />
       <Disclaimer />
+
+      <div className={`${styles.stickyBar} ${styles.stickyColumn}`}>
+        <a
+          className={`${btn.primary} ${btn.large}`}
+          href={judgment.reportUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          안전신문고로 이동 <Icon name="externalLink" size={18} />
+          <span className="sr-only">(새 탭에서 열려요)</span>
+        </a>
+        <p className={styles.stickyNote}>
+          {ready ? '신고 준비가 끝났어요.' : `확인하지 않은 항목이 ${remaining}개 있어요`}
+        </p>
+      </div>
     </>
   );
 }

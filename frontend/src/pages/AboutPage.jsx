@@ -1,17 +1,18 @@
 // 소개 화면 (/about): 서비스 목적, 작동 방식, 팀 소개, AI의 한계, 모델 정보
 import { AI_MODEL_NAME, AI_PROVIDER, EXTERNAL_AI_NOTICE } from '../constants/aiInfo.js';
+import Icon from '../components/Icon.jsx';
 import styles from './AboutPage.module.css';
 
-// 작동 방식 3단계
+// 작동 방식 3단계 (icon: components/Icon.jsx의 아이콘 이름)
 const HOW_IT_WORKS = [
-  { icon: '📷', title: '사진 찍기', text: '주차된 차와 주변이 함께 나오게 사진을 찍어요.' },
+  { icon: 'camera', title: '사진 찍기', text: '주차된 차와 주변이 함께 나오게 사진을 찍어요.' },
   {
-    icon: '🤖',
+    icon: 'sparkles',
     title: 'AI 분석',
     text: `사진을 볼 수 있는 AI(${AI_PROVIDER} · ${AI_MODEL_NAME})가 우리가 정한 판별 기준에 따라 분석해요. 사진은 우리 서버에 저장하지 않아요.`,
   },
   {
-    icon: '🧭',
+    icon: 'compass',
     title: '안내 받기',
     text: '위반 유형, 위험한 이유, 신고 요건과 신고 방법을 알려 드려요.',
   },
@@ -65,8 +66,8 @@ export default function AboutPage() {
         <ol className={styles.flow}>
           {HOW_IT_WORKS.map((item, index) => (
             <li key={item.title} className={styles.flowItem}>
-              <span className={styles.flowIcon} aria-hidden="true">
-                {item.icon}
+              <span className={styles.flowIcon}>
+                <Icon name={item.icon} size={22} />
               </span>
               <div>
                 <h3 className={styles.flowTitle}>
@@ -121,7 +122,7 @@ export default function AboutPage() {
       </section>
 
       <p className={styles.sub}>
-        <span aria-hidden="true">🌐</span> {EXTERNAL_AI_NOTICE}
+        <Icon name="globe" size={16} /> {EXTERNAL_AI_NOTICE}
       </p>
     </div>
   );

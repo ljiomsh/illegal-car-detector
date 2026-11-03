@@ -18,12 +18,7 @@
   gap: var(--space-3);
 }
 
-.status {
-  color: var(--color-text-sub);
-  font-size: var(--font-size-sm);
-  text-align: center;
-}
-
+.status,
 .privacy {
   color: var(--color-text-sub);
   font-size: var(--font-size-sm);
@@ -31,8 +26,9 @@
 }
 
 .error {
-  display: grid;
-  gap: var(--space-3);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--color-danger);
   border-radius: var(--radius-md);
@@ -41,24 +37,8 @@
   font-weight: 700;
 }
 
-/* MEDIUM 경고 (주황색) */
-.warning {
-  padding: var(--space-3) var(--space-4);
-  border: 2px solid var(--color-warning);
-  border-radius: var(--radius-md);
-  background: var(--color-warning-soft);
-  color: var(--color-warning-text);
-  font-weight: 700;
-}
-
-/* "○○에도 해당될 수 있어요" */
-.notice {
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  font-weight: 600;
+.error > svg {
+  margin-top: 3px;
 }
 
 /* LOW: 다시 찍기 안내 */
@@ -72,31 +52,148 @@
 }
 
 .lowTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   color: var(--color-warning-text);
   font-size: var(--font-size-lg);
   font-weight: 800;
 }
 
 .feedback {
-  display: grid;
+  display: flex;
+  justify-content: center;
 }
 
-.typeSummary {
-  font-size: var(--font-size-lg);
+/* 스크롤해도 화면 아래(탭 바로 위)에 붙어 있는 버튼 막대 */
+.stickyBar {
+  position: sticky;
+  bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+  z-index: 5;
+  display: flex;
+  gap: var(--space-2);
+  margin: 0 calc(-1 * var(--space-4));
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -4px 12px rgba(16, 24, 40, 0.06);
+}
+
+.stickyColumn {
+  flex-direction: column;
+}
+
+.stickyNote {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+/* 아이콘만 있는 네모 버튼 (다시 하기) */
+.iconButton {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 56px;
+  min-height: 56px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: var(--color-bg);
+}
+
+/* 신고 방법: 맨 위 "결과로" */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  justify-self: start;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.typeChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--type-soft);
+  color: var(--type-text);
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+}
+
+/* ① 요건 확인하기 → ② 안전신문고에 신고 */
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.stepCurrent,
+.stepDone,
+.stepTodo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
   font-weight: 700;
 }
 
-/* 외부 AI가 알려 준 판단 근거 */
-.reasonCard {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--color-primary-soft);
+.stepCurrent {
+  background: var(--color-primary);
+  color: #ffffff;
+  font-weight: 800;
 }
 
-.reasonTitle {
+.stepDone {
+  background: var(--color-safe-soft);
+  color: var(--color-safe-text);
+}
+
+.stepTodo {
+  background: var(--color-surface);
+  color: var(--color-text-sub);
+  box-shadow: var(--shadow-card);
+}
+
+.stepNumber {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+}
+
+.stepCurrent .stepNumber {
+  background: #ffffff;
   color: var(--color-primary);
-  font-size: var(--font-size-md);
-  font-weight: 800;
+}
+
+.stepDone .stepNumber {
+  background: var(--color-safe-text);
+  color: #ffffff;
+}
+
+.stepTodo .stepNumber {
+  background: var(--color-track);
+  color: var(--color-text-sub);
 }

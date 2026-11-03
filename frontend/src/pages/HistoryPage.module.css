@@ -1,6 +1,6 @@
 .page {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-5);
 }
 
 .heading {
@@ -9,15 +9,8 @@
 }
 
 .sectionTitle {
-  margin-bottom: var(--space-3);
   font-size: var(--font-size-lg);
   font-weight: 800;
-}
-
-.total {
-  color: var(--color-text-sub);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
 }
 
 .message {
@@ -36,54 +29,153 @@
   font-weight: 700;
 }
 
-/* 통계 카드 4개: 375px에서는 2×2, 넓으면 4칸 한 줄 */
-.statGrid {
+/* 유형별 판별 횟수: 막대 하나 + 범례 */
+.stats {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.statsHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.statsTitle {
+  font-size: var(--font-size-md);
+  font-weight: 800;
+}
+
+.total {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+}
+
+.total strong {
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.stack {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--color-track);
+}
+
+.stackPart {
+  flex-basis: 0;
+}
+
+.legend {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: 6px var(--space-3);
   list-style: none;
+  font-size: var(--font-size-sm);
 }
 
 @media (min-width: 560px) {
-  .statGrid {
+  .legend {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
-.statCard {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-1);
-  padding: var(--space-4) var(--space-2);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-card);
-  text-align: center;
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.statIcon {
-  font-size: 1.75rem;
-  line-height: 1;
+.swatch {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
 }
 
-.statName {
-  color: var(--color-text-sub);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-}
-
-.statCount {
-  font-size: var(--font-size-2xl);
-  font-weight: 800;
-  line-height: 1.2;
+.legendCount {
+  margin-left: auto;
   font-variant-numeric: tabular-nums;
 }
 
-.statUnit {
-  margin-left: 2px;
+/* 최근 기록 */
+.recent {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--color-bg);
+}
+
+.chipOn,
+.chipOn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.emptyFilter {
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-sub);
+  text-align: center;
+}
+
+/* 날짜별 묶음 */
+.dayGroups {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.dayTitle {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
   color: var(--color-text-sub);
   font-size: var(--font-size-sm);
+  font-weight: 800;
+}
+
+.dayCount {
+  font-size: var(--font-size-xs);
   font-weight: 600;
+}
+
+.more {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-xs);
+  text-align: center;
 }
 
 .list {
@@ -103,12 +195,18 @@
 }
 
 .itemIcon {
+  display: grid;
   flex-shrink: 0;
-  font-size: 1.75rem;
-  line-height: 1;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--type-soft);
+  color: var(--type-text);
 }
 
 .itemBody {
+  flex: 1;
   min-width: 0;
 }
 
@@ -118,14 +216,28 @@
 
 .itemMeta {
   color: var(--color-text-sub);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
 }
 
 .feedbackTag {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
   margin-top: var(--space-1);
   color: var(--color-primary);
-  font-size: var(--font-size-xs);
+  font-size: 0.75rem;
   font-weight: 700;
+}
+
+/* 오른쪽 확신도 배지 */
+.badge {
+  flex-shrink: 0;
+  padding: var(--space-1) 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 기록이 없을 때 */
@@ -141,8 +253,7 @@
 }
 
 .emptyIcon {
-  font-size: 3rem;
-  line-height: 1;
+  color: var(--color-text-sub);
 }
 
 .emptyTitle {

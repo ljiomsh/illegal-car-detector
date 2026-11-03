@@ -14,10 +14,6 @@ export const DEMO_MODEL_VERSION = 'demo';
 
 const DEMO_REASON = '비상 시연 모드라서 AI가 사진을 보지 않고 정해진 결과를 보여 줘요.';
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 // 배열에서 하나를 무작위로 골라요.
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
@@ -84,9 +80,18 @@ function findTopLabel(probabilities) {
   );
 }
 
-// 분석하는 것처럼 1~1.5초 기다린 뒤, 진짜 AI 결과와 같은 모양으로 돌려줘요.
-export async function analyzeDemo() {
-  await delay(1000 + Math.random() * 500);
+// 분석하는 것처럼 2~2.5초 기다린 뒤, 진짜 AI 결과와 같은 모양으로 돌려줘요.
+// (분석 중 화면을 볼 수 있게 조금 기다려요. 취소하면 진짜 AI와 같은 CANCELLED 오류를 내요)
+export async function analyzeDemo({ signal } = {}) {
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, 2000 + Math.random() * 500);
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timer);
+      const error = new Error('분석을 취소했어요.');
+      error.code = 'CANCELLED';
+      reject(error);
+    });
+  });
   const probabilities = makeProbabilities(getMockOption());
   const label = findTopLabel(probabilities);
   return {

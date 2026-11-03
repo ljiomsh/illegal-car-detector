@@ -82,12 +82,15 @@ const ANALYZE_TIMEOUT_MS = 70_000;
 
 // 사진을 서버(/api/analyze)로 보내 AI 판별 결과를 받아요. (api/analyzePhoto.js가 써요)
 // → { label, confidence, probabilities, reason, modelVersion }
-export async function analyzeImage(imageBlob) {
+// signal: 사용자가 "취소"를 누르면 멈출 수 있게 받는 AbortSignal (없어도 돼요)
+export async function analyzeImage(imageBlob, { signal } = {}) {
   const formData = new FormData();
   formData.append('image', imageBlob, 'photo.jpg');
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ANALYZE_TIMEOUT_MS);
+  const cancel = () => controller.abort();
+  signal?.addEventListener('abort', cancel);
   try {
     // FormData를 보낼 때는 Content-Type을 직접 쓰지 않아요. (브라우저가 알맞게 넣어 줘요)
     const response = await fetch(`${API_BASE}/analyze`, {
@@ -101,13 +104,17 @@ export async function analyzeImage(imageBlob) {
     return await response.json();
   } catch (error) {
     if (error.name === 'AbortError') {
-      const timeoutError = new Error('AI 분석 시간이 너무 오래 걸려요.');
-      timeoutError.code = 'TIMEOUT';
-      throw timeoutError;
+      // 사용자가 취소했으면 CANCELLED, 아니면 시간 초과(TIMEOUT)예요.
+      const abortError = signal?.aborted
+        ? new Error('분석을 취소했어요.')
+        : new Error('AI 분석 시간이 너무 오래 걸려요.');
+      abortError.code = signal?.aborted ? 'CANCELLED' : 'TIMEOUT';
+      throw abortError;
     }
     throw error;
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', cancel);
   }
 }
 

@@ -1,4 +1,4 @@
-// 4가지 유형의 확률을 막대그래프로 보여 줘요. (높은 순서대로)
+// 4가지 유형의 확률을 막대그래프로 보여 줘요. (높은 순서대로, 한 줄에 이름 | 막대 | %)
 // 1위 막대만 유형 색으로 칠하고, 나머지는 회색이에요. 숫자(%)도 항상 같이 보여 줘요.
 import { getViolationType, LABELS, toPercent } from '../constants/violationTypes';
 import styles from './ProbabilityBars.module.css';
@@ -21,22 +21,18 @@ export default function ProbabilityBars({ probabilities, topLabel }) {
           const isTop = label === topLabel;
 
           return (
-            <li key={label} className={styles.row}>
-              <div className={styles.rowHead}>
-                <span className={isTop ? styles.nameTop : styles.name}>
-                  <span aria-hidden="true">{type.icon}</span> {type.name}
-                </span>
-                <span className={styles.percent}>{percent}%</span>
-              </div>
-              <div className={styles.track} aria-hidden="true">
-                <div
+            <li key={label} className={`${styles.row} ${isTop ? styles.top : ''}`}>
+              <span className={styles.name}>{type.name}</span>
+              <span className={styles.track} aria-hidden="true">
+                <span
                   className={styles.bar}
                   style={{
                     width: `${percent}%`,
                     background: isTop ? type.color : 'var(--color-border-strong)',
                   }}
                 />
-              </div>
+              </span>
+              <span className={styles.percent}>{percent}%</span>
             </li>
           );
         })}

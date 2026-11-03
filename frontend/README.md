@@ -93,8 +93,10 @@ src/
 │  ├─ PhotoPicker.jsx       # 사진 찍기 / 갤러리 버튼 + 촬영 팁
 │  ├─ CameraCapture.jsx     # 브라우저 안 카메라 화면 + "촬영하기"
 │  ├─ PhotoTips.jsx         # 촬영 요령 목록 (사진 고르기·다시 찍기 안내에서 같이 사용)
-│  ├─ PhotoPreview.jsx      # 사진 미리보기 + "분석 중" 표시
-│  ├─ ResultCard.jsx        # 유형 배지 + 확신도 + 위험한 이유
+│  ├─ PhotoPreview.jsx      # 사진 미리보기 (분석 중에는 어둡게 + 훑는 선)
+│  ├─ AnalyzingProgress.jsx # 분석 중 3단계 진행 상황 + 지난 시간 + 팁 + 취소
+│  ├─ ResultCard.jsx        # 결론(유형·확신도·썸네일) + 확신 보통 경고 + AI 판단 근거, 위험한 이유 카드
+│  ├─ Icon.jsx              # 선 아이콘 (이모지 대신 사용)
 │  ├─ ProbabilityBars.jsx   # 4가지 유형 확률 막대
 │  ├─ Checklist.jsx         # 신고 요건 체크박스
 │  ├─ ReportGuide.jsx       # 신고 단계 + 안전신문고 링크
@@ -112,6 +114,7 @@ src/
 │  └─ violationTypes.js     # 라벨 → 한글 이름·아이콘·색상, 확신도 기준(0.7 / 0.4)
 ├─ utils/
 │  ├─ resizeImage.js        # 사진 긴 변을 1024px로 줄이기
+│  ├─ dateGroups.js         # 기록을 날짜별(오늘·어제·11월 2일)로 묶기
 │  └─ timeAgo.js            # "3분 전" 같은 시간 표시
 └─ styles/
    ├─ tokens.css            # 색상·간격·글자 크기 변수
@@ -120,7 +123,8 @@ src/
 ```
 
 - 스타일은 각 컴포넌트 옆의 `*.module.css`(CSS Modules)에 있고, 색·간격은 `tokens.css` 변수를 써요.
-- 아이콘(이모지)은 `constants/violationTypes.js`에서만 관리해요. SVG로 바꿀 때 여기만 고치면 돼요.
+- 아이콘은 `components/Icon.jsx`의 선 아이콘을 써요. (`<Icon name="camera" />`) 유형별 아이콘 이름과
+  기록 막대 색은 `constants/violationTypes.js`의 `icon`, `chartColor`에 있어요.
 
 ---
 
