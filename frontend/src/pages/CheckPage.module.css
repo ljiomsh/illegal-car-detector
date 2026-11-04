@@ -60,6 +60,11 @@
   font-weight: 800;
 }
 
+.lowReason {
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+}
+
 .feedback {
   display: flex;
   justify-content: center;

@@ -12,6 +12,7 @@ import PhotoPicker from '../components/PhotoPicker.jsx';
 import PhotoPreview from '../components/PhotoPreview.jsx';
 import PhotoTips from '../components/PhotoTips.jsx';
 import AnalyzingProgress from '../components/AnalyzingProgress.jsx';
+import AiChecks from '../components/AiChecks.jsx';
 import ResultCard, { DangerReasons } from '../components/ResultCard.jsx';
 import ProbabilityBars from '../components/ProbabilityBars.jsx';
 import Checklist from '../components/Checklist.jsx';
@@ -288,9 +289,14 @@ function ResultStep({
         <PhotoPreview src={photoUrl} />
         <section className={styles.lowCard} aria-labelledby="low-title">
           <h2 id="low-title" className={styles.lowTitle}>
-            <Icon name="help" size={22} /> AI가 사진을 잘 알아보지 못했어요
+            <Icon name="help" size={22} />
+            {prediction.checks?.vehicle === 'none'
+              ? '사진에서 주차된 차를 찾지 못했어요'
+              : 'AI가 사진을 잘 알아보지 못했어요'}
           </h2>
           <p>판별 결과를 믿기 어려워서 보여 드리지 않을게요. 아래 요령대로 다시 찍어 주세요.</p>
+          {prediction.reason && <p className={styles.lowReason}>AI의 설명: {prediction.reason}</p>}
+          <AiChecks checks={prediction.checks} />
         </section>
         <PhotoTips title="다시 찍을 때는 이렇게 해 보세요" />
         <button type="button" className={`${btn.primary} ${btn.large}`} onClick={onRetake}>

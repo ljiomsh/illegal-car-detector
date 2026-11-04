@@ -10,9 +10,11 @@
 ## AI 판별 방식
 
 사진을 서버(`/api/analyze`)로 보내면, 서버가 **사진을 볼 수 있는 대규모 언어 모델(비전 LLM)** 에 판별을 맡겨요.
-- 모델: NVIDIA Build의 **Nemotron 3 Nano Omni** (`nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`) (`backend/src/main/resources/application.yaml`의 `nvidia.model`에서 바꿀 수 있어요)
-- 판별 기준: 기획서의 라벨링 기준서(횡단보도 위 / 인도 위 / 소화전 주변 / 기타 불법 주정차 / 정상 주차) 정의를 프롬프트로 알려 줘요.
-- AI는 유형별 확률과 판단 근거(한두 문장)를 JSON으로 답하고, 서버가 값을 검사·보정해서 화면에 보내요.
+- 모델: NVIDIA Build의 **Nemotron 3.5 Super VL** (`nvidia/nemotron-3.5-super-vl-120b-a12b`) (`backend/src/main/resources/application.yaml`의 `nvidia.model`에서 바꿀 수 있어요)
+- 판별 기준: 기획서의 라벨링 기준서(횡단보도 위 / 인도 위 / 소화전 주변 / 기타 불법 주정차 / 정상 주차)를 단계별 확인 항목으로 알려 줘요.
+- AI는 **사진에서 보이는 것**(주차된 차가 있는지, 횡단보도 줄 위인지, 바퀴가 보도 위인지, 소화전 5m 안인지, 다른 금지 표시)을
+  정해진 값으로 답하고, **유형은 서버가 우선순위 규칙으로 정해요.** 차가 없거나 판단이 어긋나면 확신도를 낮춰서 "다시 찍기"나 "보통"으로 보여 줘요.
+- 화면의 결과 카드에 "AI가 확인한 것"이 나와서 왜 그렇게 판별했는지 알 수 있어요. (자세한 규칙: [backend/README.md](backend/README.md))
 - 사진은 우리 서버에 저장하지 않아요. 판별 결과 숫자만 기록해요.
 
 직접 사진을 모아 모델을 학습하는 방식도 검토했지만, 사진 수집에 시간이 많이 들어서 비전 LLM 방식으로 정했어요.

@@ -3,7 +3,7 @@
 // ★ 백엔드 application.yaml의 nvidia.model을 바꾸면 아래 AI_MODEL_NAME도 같이 바꿔 주세요.
 
 export const AI_PROVIDER = 'NVIDIA Build';
-export const AI_MODEL_NAME = 'Nemotron 3 Nano Omni';
+export const AI_MODEL_NAME = 'Nemotron 3.5 Super VL';
 
 // 사진이 어디로 가는지 알려 주는 개인정보 안내
 export const PRIVACY_NOTICE = `사진은 분석할 때만 외부 AI(${AI_PROVIDER})로 보내지고, 우리 서버에는 저장하지 않아요.`;

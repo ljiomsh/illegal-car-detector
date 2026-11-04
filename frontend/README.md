@@ -13,7 +13,7 @@
 | `OTHER` | 🚫 기타 불법 주정차 (교차로 모퉁이, 버스 정류소, 어린이보호구역 정문 앞 등) |
 | `NORMAL` | ✅ 정상 주차 |
 
-> 사진 판별은 **서버(`../backend`)의 비전 LLM(NVIDIA Build · Nemotron 3 Nano Omni)** 이 해요.
+> 사진 판별은 **서버(`../backend`)의 비전 LLM(NVIDIA Build · Nemotron 3.5 Super VL)** 이 해요.
 > 화면은 사진을 줄여서 `/api/analyze`로 보내고, 받은 결과로 안내 화면을 보여 줘요.
 
 ---
@@ -96,6 +96,7 @@ src/
 │  ├─ PhotoTips.jsx         # 촬영 요령 목록 (사진 고르기·다시 찍기 안내에서 같이 사용)
 │  ├─ PhotoPreview.jsx      # 사진 미리보기 (분석 중에는 어둡게 + 훑는 선)
 │  ├─ AnalyzingProgress.jsx # 분석 중 3단계 진행 상황 + 지난 시간 + 팁 + 취소
+│  ├─ AiChecks.jsx          # "AI가 확인한 것" (주차된 차, 횡단보도, 인도, 소화전, 다른 금지 표시)
 │  ├─ ResultCard.jsx        # 결론(유형·확신도·썸네일) + 확신 보통 경고 + AI 판단 근거, 위험한 이유 카드
 │  ├─ Icon.jsx              # 선 아이콘 (이모지 대신 사용)
 │  ├─ ProbabilityBars.jsx   # 5가지 유형 확률 막대
@@ -112,6 +113,7 @@ src/
 │  └─ guides.js             # 유형별 안내 문구, 촬영 팁 (서버 실패 시 fallback으로도 사용)
 ├─ constants/
 │  ├─ aiInfo.js             # AI 모델 이름, 개인정보·외부 AI 안내 문구
+│  ├─ aiChecks.js           # AI 확인 항목(checks)의 이름표와 판별 순서
 │  └─ violationTypes.js     # 라벨 → 한글 이름·아이콘·색상, 확신도 기준(0.7 / 0.4)
 ├─ utils/
 │  ├─ resizeImage.js        # 사진 긴 변을 1024px로 줄이기
@@ -142,7 +144,8 @@ const result = await analyzePhoto(imgElement);
 //   confidence: 0~1 (label의 확률 = 가장 높은 확률),
 //   probabilities: { CROSSWALK, SIDEWALK, HYDRANT, OTHER, NORMAL },  // 합계 1
 //   reason: 'AI가 말한 판단 근거' | null,
-//   modelVersion: 'nemotron-3-nano-omni'                      // 비상 시연 모드는 'demo'
+//   checks: { vehicle, crosswalk, sidewalk, hydrant, noParking } | null,  // AI가 확인한 것
+//   modelVersion: 'nemotron-3.5-super-v'                      // 비상 시연 모드는 'demo'
 // }
 ```
 
@@ -193,7 +196,7 @@ const result = await analyzePhoto(imgElement);
   "label": "CROSSWALK",
   "confidence": 0.9,
   "probabilities": { "CROSSWALK": 0.9, "SIDEWALK": 0.05, "HYDRANT": 0.03, "OTHER": 0.0, "NORMAL": 0.02 },
-  "modelVersion": "nemotron-3-nano-omni",
+  "modelVersion": "nemotron-3.5-super-v",
   "createdAt": "2026-10-15T09:30:00Z",
   "feedback": null                    // 또는 { "correct": false, "actualLabel": "SIDEWALK", "createdAt": "..." }
 }

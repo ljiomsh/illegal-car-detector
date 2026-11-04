@@ -38,8 +38,11 @@ nvidia:
   base-url: https://integrate.api.nvidia.com/v1
   # 사진을 볼 수 있는 모델 이름. 바꾸면 판별 기록의 modelVersion도 따라 바뀌어요. (예: nvidia/nemotron-3-nano-omni-30b-a3b-reasoning → nemotron-3-nano-omni)
   # 바꿀 때는 frontend/src/constants/aiInfo.js의 화면 안내 문구도 같이 바꿔 주세요.
-  model: nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
+  # 2026-11-05 실측: Super VL(120B)이 1~5초로 빠르면서 차가 없는 사진을 가장 잘 걸러 냈어요.
+  # (Nano Omni도 쓸 수 있어요: nvidia/nemotron-3-nano-omni-30b-a3b-reasoning)
+  model: nvidia/nemotron-3.5-super-vl-120b-a12b
   read-timeout: 60s # AI 응답을 기다리는 최대 시간 (프론트는 70초까지 기다려요)
+  reasoning: false # true면 AI가 생각 과정을 거친 뒤 답해요. 더 꼼꼼하지만 느려져요.
 
 ---
 # ───────────── postgres 프로필 (Supabase 같은 PostgreSQL에 연결할 때) ─────────────

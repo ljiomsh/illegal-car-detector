@@ -9,6 +9,7 @@ import {
   LABELS,
   toPercent,
 } from '../constants/violationTypes';
+import AiChecks from './AiChecks.jsx';
 import Icon from './Icon.jsx';
 import styles from './ResultCard.module.css';
 
@@ -78,6 +79,8 @@ export default function ResultCard({ judgment, prediction, photoUrl }) {
           <p>{prediction.reason}</p>
         </div>
       )}
+
+      <AiChecks checks={prediction.checks} />
     </section>
   );
 }

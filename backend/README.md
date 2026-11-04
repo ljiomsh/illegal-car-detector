@@ -2,7 +2,7 @@
 
 환일고 「환일야호」 팀 · 2026 AI동행 프로젝트 자율탐구 출품작
 
-이 서버는 ① 사진을 비전 LLM(NVIDIA Build · Nemotron 3 Nano Omni)에 보내 5가지 유형으로 판별하고
+이 서버는 ① 사진을 비전 LLM(NVIDIA Build · Nemotron 3.5 Super VL)에 보내 5가지 유형으로 판별하고
 ② 유형별 안내(위험한 이유·신고 요건·신고 방법)를 돌려주고 ③ 판별 기록과 피드백을 저장하고 ④ 통계를 보여 줘요.
 
 > **개인정보 원칙**: 사진은 판별할 때만 NVIDIA로 보내고, 저장하지도 로그에 남기지도 않아요.
@@ -93,19 +93,76 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 ### POST /api/analyze — AI 사진 판별
 
 사진을 받아 NVIDIA Build API의 비전 LLM으로 판별해요. **사진은 저장하지 않고 로그에도 남기지 않아요.**
-판별 기준은 라벨링 기준서의 5가지 정의를 프롬프트로 알려 줘요. (`NvidiaVisionClient.PROMPT`)
 
-- 설정: `src/main/resources/application.yaml`
-  ```yaml
-  nvidia:
-    base-url: https://integrate.api.nvidia.com/v1
-    model: nvidia/nemotron-3-nano-omni-30b-a3b-reasoning   # 사진을 볼 수 있는 모델
-    read-timeout: 60s                                      # AI 응답을 기다리는 최대 시간
-  ```
-  - 응답의 `modelVersion`은 모델 이름에서 회사 이름(`/` 앞)을 빼고 20자까지만 쓴 값이에요. (예: `nemotron-3-nano-omni`)
-  - 모델별 실측(2026-11-04, 같은 사진): Nemotron 3 Nano Omni **1~2초**, DeepSeek V4.1 Flash **41~59초**
-    (DeepSeek은 60초 제한에 자주 걸려서 Nemotron으로 바꿨어요. 사진을 512px로 줄여도 시간은 거의 같았어요.)
-  - 모델을 바꾸면 `frontend/src/constants/aiInfo.js`의 화면 안내 문구도 같이 바꿔 주세요.
+#### 판별 방식: AI는 "보이는 것"을 확인하고, 유형은 서버가 규칙으로 정해요
+
+1. AI에게 판별 기준(`NvidiaVisionClient.SYSTEM_PROMPT`)을 system 메시지로 주고, 사진을 보내요.
+2. AI는 사진에서 확인한 것을 `checks`에 **정해진 값으로만** 적어요.
+
+   | 키 | 값 | 뜻 |
+   |---|---|---|
+   | `vehicle` | `parked` · `moving` · `none` · `unclear` | 세워 둔 차 / 달리는 차 / 차 없음 / 판단 불가 |
+   | `crosswalk` | `on` · `near` · `none` | 차 아래에 줄무늬 / 줄 밖이지만 약 10m 안 / 안 보이거나 10m보다 멀리 |
+   | `sidewalk` | `on` · `none` | 바퀴가 연석 위 보도(색칠된 보도 포함)에 올라감 / 바퀴가 모두 차도 (울타리·볼라드 너머 차도도 none) |
+   | `hydrant` | `near` · `far` · `none` | 같은 쪽 길가 약 5m 안 / 멀거나 길·울타리 건너편 / 안 보임 |
+   | `noParking` | `yellow_line` · `intersection` · `bus_stop` · `school_zone` · `fire_lane` · `sign` · `none` | 노란 선, 교차로 모퉁이 5m, 버스 정류소 10m, 어린이보호구역, 소방차 전용구역, 금지 표지판 |
+
+3. 서버(`AnalysisParser`)가 `checks`로 유형을 정해요. **위에서부터 처음 맞는 것**이에요.
+   횡단보도 `on` → `CROSSWALK`, 소화전 `near` → `HYDRANT`, 인도 `on` → `SIDEWALK`,
+   횡단보도 `near`(10m 안, 도로교통법 제32조)이거나 금지 표시 있음 → `OTHER`, 그 밖 → `NORMAL`
+   - 소화전을 인도보다 먼저 봐요. 보도에서 찍은 소화전 사진을 AI가 "바퀴가 보도 위"로 자주 잘못 봐서예요.
+4. 확신도를 보정해요.
+   - AI가 고른 label이 규칙과 다르면 규칙의 유형으로 바꾸고 0.6(보통) 이하로 낮춰요.
+   - 차가 없거나(`none`) 판단할 수 없으면(`unclear`) 0.3 이하로 낮춰요. → 화면이 "다시 찍기"를 안내해요.
+   - 차가 달리는 중(`moving`)이거나 `checks`가 없거나 이상하면 0.6(보통) 이하로 낮춰요.
+
+#### 설정 (`src/main/resources/application.yaml`)
+
+```yaml
+nvidia:
+  base-url: https://integrate.api.nvidia.com/v1
+  model: nvidia/nemotron-3.5-super-vl-120b-a12b   # 사진을 볼 수 있는 모델
+  read-timeout: 60s                                # AI 응답을 기다리는 최대 시간
+  reasoning: false                                 # true면 생각 과정을 거친 뒤 답해요 (느려져요)
+```
+- 응답의 `modelVersion`은 모델 이름에서 회사 이름(`/` 앞)을 빼고 20자까지만 쓴 값이에요. (예: `nemotron-3.5-super-v`)
+- 모델을 바꾸면 `frontend/src/constants/aiInfo.js`의 화면 안내 문구도 같이 바꿔 주세요.
+
+#### 모델 비교 (2026-11-05, 같은 사진 8장)
+
+시험 사진: 차가 없는 사진 5장(정답: 다시 찍기), 울타리 너머 도로변에 줄지어 선 차(정답: 인도 아님), 횡단보도 그림, 정지선 뒤 주행 차(정답: 정상)
+
+| 방식 | 차 없는 사진 5장 | 도로변 줄 주차 | 횡단보도 그림 | 정지선 뒤 | 시간 |
+|---|---|---|---|---|---|
+| 예전 프롬프트 + Nano Omni | 5장 모두 "정상 100%" | 인도(틀림) | 맞음 | 맞음 | 2~4초 |
+| 새 규칙 + Nano Omni | 3장 다시 찍기 | 인도(틀림) | 맞음 | 횡단보도(보통, 틀림) | 2~5초 |
+| 새 규칙 + Nano Omni + 생각 | 5장 다시 찍기 | 소화전(틀림) | 맞음 | 횡단보도(보통, 틀림) | 6~22초 |
+| **새 규칙 + Super VL (기본)** | 4장 다시 찍기, 1장 보통 | 인도(틀림) | 맞음 | 횡단보도(보통, 틀림) | **1~5초** |
+| 새 규칙 + Super VL + 생각 | 4장 다시 찍기, 1장 보통 | 소화전(틀림) | 맞음 | 횡단보도(보통, 틀림) | 6~30초 |
+
+- DeepSeek V4.1 Flash는 같은 사진에 41~59초가 걸려서 60초 제한에 자주 걸렸어요.
+
+#### 실제 사진 평가 (2026-11-05, Super VL, 17장)
+
+정답을 매긴 실제 사진(횡단보도 4, 소화전 5, 인도 1, 기타 1, 정상 1, 차 없음 5)으로 기준을 고쳐 가며 쟀어요.
+
+| 판별 기준 | 맞힌 수 | 바뀐 점 |
+|---|---|---|
+| 처음 규칙 (횡단보도 → 인도 → 소화전) | 13/17 | 소화전 사진 2장을 "인도"로 봄 |
+| 인도를 엄격하게 + 소화전을 인도보다 먼저 | 12/17 | 소화전 5장 모두 맞힘, 진짜 인도 사진을 놓침 |
+| 인도를 "한쪽 바퀴만 걸쳐도" + 횡단보도 10m 안 = 기타 | 13/17 (2번 같은 결과) | |
+| **+ 색칠된 보도도 보도 (지금 기준)** | **14/17** | 초록색 보도 사진도 맞힘. 평균 4초 |
+
+남은 오답: 사진 앞에 소화전도 보이는 횡단보도 사진(→ 소화전), 횡단보도 바로 앞 줄 주차(→ 횡단보도), 멀리 무언가 보이는 가로수길(→ 정상)
+
+#### 평가 다시 하기
+
+`평가사진/<정답>/` 폴더(`CROSSWALK`, `SIDEWALK`, `HYDRANT`, `OTHER`, `NORMAL`, 차 없음은 `NOCAR`)에 사진을 넣고,
+백엔드를 켠 상태에서 실행해요. 사진은 앱처럼 긴 변 1024px로 줄여서 보내요. (`평가사진`은 git에 올라가지 않아요)
+```powershell
+cd backend
+.\scripts\evaluate-ai.ps1 -Root ..\평가사진 -Port 8080
+```
 
 - 요청: `multipart/form-data`, 필드 이름 `image`. JPG·PNG·WEBP만, 최대 5MB (파일 앞부분을 직접 보고 형식을 확인해요)
 - API 키(`NVIDIA_API_KEY`): **`backend/secrets.properties`** 파일(git에 올라가지 않음) 또는 환경변수에서 읽어요.
@@ -132,16 +189,17 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 { "label": "CROSSWALK", "confidence": 0.86,
   "probabilities": { "CROSSWALK": 0.86, "SIDEWALK": 0.08, "HYDRANT": 0.02, "OTHER": 0.0, "NORMAL": 0.04 },
   "reason": "차량 앞부분이 횡단보도 흰 줄 위에 걸쳐 있어요.",
-  "modelVersion": "nemotron-3-nano-omni" }
+  "checks": { "vehicle": "parked", "crosswalk": "on", "sidewalk": "none", "hydrant": "none", "noParking": "none" },
+  "modelVersion": "nemotron-3.5-super-v" }
 ```
 - AI 답에 `<think>…</think>`나 ```` ```json ```` 코드펜스가 붙어도 첫 번째 JSON 객체만 꺼내요.
 - 확률은 5개를 모두 채우고(없으면 0) 합이 1이 되게 맞춰요. 합이 0이면 label에 1.0을 줘요.
 - label의 확률이 가장 크지 않으면 가장 큰 값과 서로 바꿔요. (화면과 `/api/judgments`가 "label = 최댓값"을 전제로 해요)
 - `confidence`는 label의 확률로 다시 계산해요.
-- 요청에 `chat_template_kwargs: {"thinking": false, "enable_thinking": false}`를 넣어 모델의 생각 과정을 꺼요.
+- 요청의 `chat_template_kwargs: {"thinking": ..., "enable_thinking": ...}`로 생각 과정을 켜고 꺼요. (`nvidia.reasoning`)
   모델마다 옵션 이름이 달라서 둘 다 보내요. (`thinking`: DeepSeek, `enable_thinking`: Nemotron. 모르는 이름은 무시돼요)
-  DeepSeek은 생각 과정을 켜 두면 생각 글을 1만 자 넘게 써서 약 95초가 걸렸어요.
-- `max_tokens`는 1024예요. 답은 JSON 하나(약 100토큰)라서, 모델이 길게 늘어놓아도 여기서 끊겨요.
+- `temperature`는 0.1이에요. 같은 사진에 같은 답이 나오게 무작위성을 거의 없앴어요. (같은 사진 2번 → 같은 결과 확인)
+- `max_tokens`는 1024예요. 생각 과정을 켜면 8192예요. 답은 JSON 하나(약 150토큰)라서, 모델이 길게 늘어놓아도 여기서 끊겨요.
 
 | 상황 | 응답 |
 |---|---|
@@ -160,7 +218,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
   "label": "CROSSWALK",
   "confidence": 0.92,
   "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "OTHER": 0.0, "NORMAL": 0.01 },
-  "modelVersion": "nemotron-3-nano-omni"
+  "modelVersion": "nemotron-3.5-super-v"
 }
 ```
 
@@ -199,7 +257,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
     "confidence": 0.92,
     "confidenceLevel": "HIGH",
     "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "OTHER": 0.0, "NORMAL": 0.01 },
-    "modelVersion": "nemotron-3-nano-omni",
+    "modelVersion": "nemotron-3.5-super-v",
     "createdAt": "2026-10-16T09:12:00.123456Z",
     "feedback": { "correct": false, "actualLabel": "SIDEWALK", "createdAt": "2026-10-16T09:13:10.5Z" }
   }
@@ -391,6 +449,6 @@ src/main/resources/
 - `StatsQueryTest`(@DataJpaTest): 0건 유형 포함 집계, 피드백 정확도, 피드백 덮어쓰기
 - `GuideServiceTest`: 5개 유형 로딩, 유형이 빠지거나 필수 값이 비면 시작 실패
 - `AnalyzeControllerTest`(@WebMvcTest): 정상 판별 200, 사진이 아니면 400, AI 실패 502, 키 없음 503
-- `AnalysisParserTest`: 생각 과정·코드펜스 제거, 확률 채우기·정규화, label이 최댓값이 되게 보정, 잘못된 답은 실패
+- `AnalysisParserTest`: 생각 과정·코드펜스 제거, 확률 정규화, checks 규칙(우선순위, label이 어긋나면 규칙 유형·보통, 차 없으면 0.3 이하, 달리는 차·checks 없음은 0.6 이하)
 - `NvidiaVisionClientTest`: 모델 이름 → 판별 기록용 `modelVersion` (회사 이름 빼기, 20자 제한)
 - `IllegalcardetectorApplicationTests`: 앱 전체 실행 (테스트용 메모리 DB 사용)

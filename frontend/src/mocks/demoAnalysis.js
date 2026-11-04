@@ -80,6 +80,17 @@ function findTopLabel(probabilities) {
   );
 }
 
+// 유형에 맞는 "AI가 확인한 것"을 만들어요. (진짜 AI와 같은 모양, constants/aiChecks.js)
+function makeChecks(label) {
+  return {
+    vehicle: 'parked',
+    crosswalk: label === 'CROSSWALK' ? 'on' : 'none',
+    sidewalk: label === 'SIDEWALK' ? 'on' : 'none',
+    hydrant: label === 'HYDRANT' ? 'near' : 'none',
+    noParking: label === 'OTHER' ? 'yellow_line' : 'none',
+  };
+}
+
 // 분석하는 것처럼 2~2.5초 기다린 뒤, 진짜 AI 결과와 같은 모양으로 돌려줘요.
 // (분석 중 화면을 볼 수 있게 조금 기다려요. 취소하면 진짜 AI와 같은 CANCELLED 오류를 내요)
 export async function analyzeDemo({ signal } = {}) {
@@ -99,6 +110,7 @@ export async function analyzeDemo({ signal } = {}) {
     confidence: probabilities[label],
     probabilities,
     reason: DEMO_REASON,
+    checks: makeChecks(label),
     modelVersion: DEMO_MODEL_VERSION,
   };
 }

@@ -2,7 +2,8 @@
 //
 // 사용법:
 //   const result = await analyzePhoto(imgElement, { signal, onPhase });
-//   → { label, confidence, probabilities, reason, modelVersion }
+//   → { label, confidence, probabilities, reason, checks, modelVersion }
+//   - checks: AI가 사진에서 확인한 것 (constants/aiChecks.js). 없으면 null
 //   - signal: AbortController.signal. 취소하면 code가 'CANCELLED'인 오류가 나요.
 //   - onPhase(phase): 진행 단계를 알려 줘요. 'prepare'(사진 준비) → 'analyze'(AI가 판단 중)
 //
@@ -41,6 +42,7 @@ export async function analyzePhoto(imgElement, { signal, onPhase } = {}) {
     confidence: result.confidence,
     probabilities: result.probabilities,
     reason: result.reason ?? null,
+    checks: result.checks ?? null,
     modelVersion: result.modelVersion,
   };
 }

@@ -2,3 +2,6 @@
 .env
 .env*.local
 secrets.properties
+
+# AI 정확도 평가용 사진 (번호판·얼굴이 있을 수 있어 올리지 않아요)
+평가사진/

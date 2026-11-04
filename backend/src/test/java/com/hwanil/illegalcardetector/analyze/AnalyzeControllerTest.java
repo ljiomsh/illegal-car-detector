@@ -40,15 +40,18 @@ class AnalyzeControllerTest {
 		given(analyzeService.analyze(any(), eq("image/jpeg"))).willReturn(new AnalyzeResponse(
 				ViolationType.CROSSWALK, 0.86,
 				Map.of(ViolationType.CROSSWALK, 0.86, ViolationType.SIDEWALK, 0.08,
-						ViolationType.HYDRANT, 0.02, ViolationType.NORMAL, 0.04),
-				"흰 줄 위에 있어요.", "deepseek-v4.1-flash"));
+						ViolationType.HYDRANT, 0.02, ViolationType.OTHER, 0.0, ViolationType.NORMAL, 0.04),
+				"흰 줄 위에 있어요.",
+				Map.of("vehicle", "parked", "crosswalk", "on", "sidewalk", "none", "hydrant", "none", "noParking", "none"),
+				"nemotron-3-nano-omni"));
 
 		mockMvc.perform(multipart("/api/analyze").file(new MockMultipartFile("image", "a.jpg", "image/jpeg", JPEG)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.label").value("CROSSWALK"))
 				.andExpect(jsonPath("$.probabilities.SIDEWALK").value(0.08))
 				.andExpect(jsonPath("$.reason").value("흰 줄 위에 있어요."))
-				.andExpect(jsonPath("$.modelVersion").value("deepseek-v4.1-flash"));
+				.andExpect(jsonPath("$.checks.crosswalk").value("on"))
+				.andExpect(jsonPath("$.modelVersion").value("nemotron-3-nano-omni"));
 	}
 
 	@Test

@@ -49,7 +49,7 @@ export const VIOLATION_TYPES = {
     title: '기타 불법 주정차',
     icon: 'noParking',
     chartColor: '#8e4ec6',
-    description: '교차로 모퉁이·버스 정류소 등에 서 있어요',
+    description: '횡단보도 앞·교차로 모퉁이·버스 정류소 등에 서 있어요',
     violation: true,
     color: 'var(--color-danger)',
     textColor: 'var(--color-danger-text)',

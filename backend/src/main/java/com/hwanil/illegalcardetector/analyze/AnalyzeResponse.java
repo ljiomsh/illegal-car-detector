@@ -9,11 +9,14 @@ import com.hwanil.illegalcardetector.common.ViolationType;
  * 예: { "label": "CROSSWALK", "confidence": 0.86,
  *       "probabilities": { "CROSSWALK": 0.86, "SIDEWALK": 0.08, "HYDRANT": 0.02, "OTHER": 0.0, "NORMAL": 0.04 },
  *       "reason": "차량 앞부분이 횡단보도 흰 줄 위에 걸쳐 있어요.",
- *       "modelVersion": "deepseek-v4.1-flash" }
+ *       "checks": { "vehicle": "parked", "crosswalk": "on", "sidewalk": "none", "hydrant": "none", "noParking": "none" },
+ *       "modelVersion": "nemotron-3-nano-omni" }
  *
+ * @param label         판별 유형 (checks가 있으면 서버가 규칙으로 정한 값)
  * @param confidence    label의 확률 (서버가 다시 계산한 값)
  * @param probabilities 5개 유형의 확률 (합계 1이 되게 서버가 맞춘 값)
  * @param reason        AI가 말한 판단 근거 (없으면 null)
+ * @param checks        AI가 사진에서 확인한 것 (AnalysisParser.CHECK_VALUES의 키·값). 제대로 답하지 않았으면 null
  * @param modelVersion  판별한 모델 이름 (application.yaml의 nvidia.model에서 만들어요)
  */
 public record AnalyzeResponse(
@@ -21,5 +24,6 @@ public record AnalyzeResponse(
 		double confidence,
 		Map<ViolationType, Double> probabilities,
 		String reason,
+		Map<String, String> checks,
 		String modelVersion) {
 }

@@ -1,0 +1,47 @@
+.box {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-sub);
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+}
+
+.list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+/* 항목 이름 칸은 폭을 고정하고, 값은 왼쪽 정렬로 맞춰요. */
+.row {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr);
+  gap: var(--space-2);
+  color: var(--color-text-sub);
+  font-size: var(--font-size-sm);
+}
+
+.row dd {
+  margin: 0;
+}
+
+.important {
+  color: var(--color-text);
+  font-weight: 800;
+}
+
+.note {
+  color: var(--color-text-sub);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
