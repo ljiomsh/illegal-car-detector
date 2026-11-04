@@ -110,11 +110,13 @@ public class NvidiaVisionClient {
 								Map.of("type", "image_url", "image_url", Map.of("url", dataUrl))))),
 				"temperature", 0.2,
 				"top_p", 0.95,
-				"max_tokens", 4096,
+				// 답은 JSON 하나(약 100토큰)라서 1024면 충분해요. 모델이 길게 늘어놓아도 여기서 끊겨요.
+				"max_tokens", 1024,
 				"stream", false,
-				// 생각 과정(reasoning)을 끄는 옵션. 공식 예제에는 없지만 직접 측정해서 넣었어요.
-				// 켜 두면 생각 글을 1만 자 넘게 쓰느라 약 95초가 걸려 시간 초과가 나고, 끄면 약 19초예요.
-				"chat_template_kwargs", Map.of("thinking", false));
+				// 생각 과정(reasoning)을 끄는 옵션. 모델마다 이름이 달라서 둘 다 보내요. (모르는 이름은 무시돼요)
+				// - thinking: DeepSeek. 켜 두면 생각 글을 1만 자 넘게 써서 약 95초가 걸렸어요.
+				// - enable_thinking: Nemotron. 끄면 실측 1~2초예요.
+				"chat_template_kwargs", Map.of("thinking", false, "enable_thinking", false));
 
 		byte[] responseBytes;
 		try {

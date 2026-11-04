@@ -12,7 +12,7 @@
 | `HYDRANT` | 🧯 소화전 주변 주정차 |
 | `NORMAL` | ✅ 정상 주차 |
 
-> 사진 판별은 **서버(`../backend`)의 비전 LLM(NVIDIA Build · DeepSeek V4.1 Flash)** 이 해요.
+> 사진 판별은 **서버(`../backend`)의 비전 LLM(NVIDIA Build · Nemotron 3 Nano Omni)** 이 해요.
 > 화면은 사진을 줄여서 `/api/analyze`로 보내고, 받은 결과로 안내 화면을 보여 줘요.
 
 ---
@@ -141,7 +141,7 @@ const result = await analyzePhoto(imgElement);
 //   confidence: 0~1 (label의 확률 = 가장 높은 확률),
 //   probabilities: { CROSSWALK, SIDEWALK, HYDRANT, NORMAL },  // 합계 1
 //   reason: 'AI가 말한 판단 근거' | null,
-//   modelVersion: 'deepseek-v4.1-flash'                      // 비상 시연 모드는 'demo'
+//   modelVersion: 'nemotron-3-nano-omni'                      // 비상 시연 모드는 'demo'
 // }
 ```
 
@@ -192,7 +192,7 @@ const result = await analyzePhoto(imgElement);
   "label": "CROSSWALK",
   "confidence": 0.9,
   "probabilities": { "CROSSWALK": 0.9, "SIDEWALK": 0.05, "HYDRANT": 0.03, "NORMAL": 0.02 },
-  "modelVersion": "deepseek-v4.1-flash",
+  "modelVersion": "nemotron-3-nano-omni",
   "createdAt": "2026-10-15T09:30:00Z",
   "feedback": null                    // 또는 { "correct": false, "actualLabel": "SIDEWALK", "createdAt": "..." }
 }

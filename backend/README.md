@@ -2,7 +2,7 @@
 
 환일고 「환일야호」 팀 · 2026 AI동행 프로젝트 자율탐구 출품작
 
-이 서버는 ① 사진을 비전 LLM(NVIDIA Build · DeepSeek V4.1 Flash)에 보내 4가지 유형으로 판별하고
+이 서버는 ① 사진을 비전 LLM(NVIDIA Build · Nemotron 3 Nano Omni)에 보내 4가지 유형으로 판별하고
 ② 유형별 안내(위험한 이유·신고 요건·신고 방법)를 돌려주고 ③ 판별 기록과 피드백을 저장하고 ④ 통계를 보여 줘요.
 
 > **개인정보 원칙**: 사진은 판별할 때만 NVIDIA로 보내고, 저장하지도 로그에 남기지도 않아요.
@@ -99,10 +99,12 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
   ```yaml
   nvidia:
     base-url: https://integrate.api.nvidia.com/v1
-    model: deepseek-ai/deepseek-v4.1-flash   # 사진을 볼 수 있는 모델
-    read-timeout: 60s                        # AI 응답을 기다리는 최대 시간
+    model: nvidia/nemotron-3-nano-omni-30b-a3b-reasoning   # 사진을 볼 수 있는 모델
+    read-timeout: 60s                                      # AI 응답을 기다리는 최대 시간
   ```
-  - 응답의 `modelVersion`은 모델 이름에서 회사 이름(`/` 앞)을 뺀 값이에요. (예: `deepseek-v4.1-flash`, 최대 20자)
+  - 응답의 `modelVersion`은 모델 이름에서 회사 이름(`/` 앞)을 빼고 20자까지만 쓴 값이에요. (예: `nemotron-3-nano-omni`)
+  - 모델별 실측(2026-11-04, 같은 사진): Nemotron 3 Nano Omni **1~2초**, DeepSeek V4.1 Flash **41~59초**
+    (DeepSeek은 60초 제한에 자주 걸려서 Nemotron으로 바꿨어요. 사진을 512px로 줄여도 시간은 거의 같았어요.)
   - 모델을 바꾸면 `frontend/src/constants/aiInfo.js`의 화면 안내 문구도 같이 바꿔 주세요.
 
 - 요청: `multipart/form-data`, 필드 이름 `image`. JPG·PNG·WEBP만, 최대 5MB (파일 앞부분을 직접 보고 형식을 확인해요)
@@ -130,14 +132,16 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 { "label": "CROSSWALK", "confidence": 0.86,
   "probabilities": { "CROSSWALK": 0.86, "SIDEWALK": 0.08, "HYDRANT": 0.02, "NORMAL": 0.04 },
   "reason": "차량 앞부분이 횡단보도 흰 줄 위에 걸쳐 있어요.",
-  "modelVersion": "deepseek-v4.1-flash" }
+  "modelVersion": "nemotron-3-nano-omni" }
 ```
 - AI 답에 `<think>…</think>`나 ```` ```json ```` 코드펜스가 붙어도 첫 번째 JSON 객체만 꺼내요.
 - 확률은 4개를 모두 채우고(없으면 0) 합이 1이 되게 맞춰요. 합이 0이면 label에 1.0을 줘요.
 - label의 확률이 가장 크지 않으면 가장 큰 값과 서로 바꿔요. (화면과 `/api/judgments`가 "label = 최댓값"을 전제로 해요)
 - `confidence`는 label의 확률로 다시 계산해요.
-- 요청에 `chat_template_kwargs: {"thinking": false}`를 넣어 모델의 생각 과정을 꺼요. (공식 예제에는 없는 옵션)
-  켜 두면 생각 글을 1만 자 넘게 써서 약 95초가 걸려 60초 제한에 걸렸고, 끄면 실측 11~33초였어요.
+- 요청에 `chat_template_kwargs: {"thinking": false, "enable_thinking": false}`를 넣어 모델의 생각 과정을 꺼요.
+  모델마다 옵션 이름이 달라서 둘 다 보내요. (`thinking`: DeepSeek, `enable_thinking`: Nemotron. 모르는 이름은 무시돼요)
+  DeepSeek은 생각 과정을 켜 두면 생각 글을 1만 자 넘게 써서 약 95초가 걸렸어요.
+- `max_tokens`는 1024예요. 답은 JSON 하나(약 100토큰)라서, 모델이 길게 늘어놓아도 여기서 끊겨요.
 
 | 상황 | 응답 |
 |---|---|
@@ -156,7 +160,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
   "label": "CROSSWALK",
   "confidence": 0.92,
   "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "NORMAL": 0.01 },
-  "modelVersion": "deepseek-v4.1-flash"
+  "modelVersion": "nemotron-3-nano-omni"
 }
 ```
 
@@ -195,7 +199,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
     "confidence": 0.92,
     "confidenceLevel": "HIGH",
     "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "NORMAL": 0.01 },
-    "modelVersion": "deepseek-v4.1-flash",
+    "modelVersion": "nemotron-3-nano-omni",
     "createdAt": "2026-10-16T09:12:00.123456Z",
     "feedback": { "correct": false, "actualLabel": "SIDEWALK", "createdAt": "2026-10-16T09:13:10.5Z" }
   }
@@ -254,7 +258,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 `curl`을 쓸 때 PowerShell은 JSON 안의 큰따옴표를 망가뜨리니, JSON을 파일로 저장해서 보내세요.
 
 ```powershell
-Set-Content -Encoding utf8 req.json '{"label":"CROSSWALK","confidence":0.92,"probabilities":{"CROSSWALK":0.92,"SIDEWALK":0.05,"HYDRANT":0.02,"NORMAL":0.01},"modelVersion":"deepseek-v4.1-flash"}'
+Set-Content -Encoding utf8 req.json '{"label":"CROSSWALK","confidence":0.92,"probabilities":{"CROSSWALK":0.92,"SIDEWALK":0.05,"HYDRANT":0.02,"NORMAL":0.01},"modelVersion":"nemotron-3-nano-omni"}'
 curl.exe -X POST http://localhost:8080/api/judgments -H "Content-Type: application/json" --data "@req.json"
 curl.exe http://localhost:8080/api/stats
 ```
