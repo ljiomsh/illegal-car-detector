@@ -171,7 +171,7 @@ export default function CheckPage() {
 
   return (
     <div className={styles.page}>
-      <title>판별하기 | 불법 주정차 판별·신고 도우미</title>
+      <title>판별하기 | 길터</title>
 
       {step === 'guide' && (
         <button type="button" className={styles.backLink} onClick={() => setStep('result')}>

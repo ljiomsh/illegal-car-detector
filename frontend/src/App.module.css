@@ -47,6 +47,21 @@
   text-align: center;
 }
 
+/* 서비스 이름 "길터" + 한 줄 설명 */
+.brand {
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--color-border-strong);
+  color: var(--color-text-sub);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
 /* 페이지 내용 */
 .main {
   max-width: var(--content-max-width);

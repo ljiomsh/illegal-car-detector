@@ -2,7 +2,7 @@
 // 발표 중 인터넷이나 AI가 안 될 때, 그리고 결과 화면을 개발·확인할 때 써요. (api/analyzePhoto.js)
 //
 // 주소 옵션 (?mock=...)
-//   /check?mock=CROSSWALK  → 횡단보도가 0.9로 나와요 (SIDEWALK, HYDRANT, NORMAL도 가능)
+//   /check?mock=CROSSWALK  → 횡단보도가 0.9로 나와요 (SIDEWALK, HYDRANT, OTHER, NORMAL도 가능)
 //   /check?mock=MEDIUM     → 최고 확률 0.55 (확신 보통)
 //   /check?mock=LOW        → 최고 확률 0.35 (확신 낮음)
 //   값이 없으면(?mock) 랜덤 결과가 나와요.
@@ -44,22 +44,22 @@ function getMockOption() {
   return value ? value.toUpperCase() : null;
 }
 
-// 확률 4개를 만들어요. 합계는 항상 1이에요.
+// 유형마다 하나씩 확률을 만들어요. 합계는 항상 1이에요.
 function makeProbabilities(option) {
   // 특정 라벨을 강하게: 그 라벨 0.9
   if (LABELS.includes(option)) {
     const others = shuffle(LABELS.filter((label) => label !== option));
-    return toProbabilities([option, ...others], [0.9, 0.05, 0.03, 0.02]);
+    return toProbabilities([option, ...others], [0.9, 0.04, 0.03, 0.02, 0.01]);
   }
 
   // 확신 보통: 1위 0.55, 2위 0.3 ("○○에도 해당될 수 있어요" 확인용)
   if (option === 'MEDIUM') {
-    return toProbabilities(shuffle(LABELS), [0.55, 0.3, 0.1, 0.05]);
+    return toProbabilities(shuffle(LABELS), [0.55, 0.3, 0.08, 0.05, 0.02]);
   }
 
   // 확신 낮음: 1위 0.35
   if (option === 'LOW') {
-    return toProbabilities(shuffle(LABELS), [0.35, 0.3, 0.2, 0.15]);
+    return toProbabilities(shuffle(LABELS), [0.35, 0.3, 0.15, 0.12, 0.08]);
   }
 
   // 옵션 없음: 한 라벨을 골라 0.3~0.95 사이 확률을 주고, 나머지를 랜덤하게 나눠요.

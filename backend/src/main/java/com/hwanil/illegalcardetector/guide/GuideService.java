@@ -21,7 +21,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * 서버가 시작할 때 src/main/resources/guides.json을 한 번 읽어서 메모리에 들고 있어요.
- * 4개 유형 중 하나라도 없거나 필수 내용이 비어 있으면 서버가 시작되지 않게 막아요.
+ * 5개 유형 중 하나라도 없거나 필수 내용이 비어 있으면 서버가 시작되지 않게 막아요.
  * (잘못된 안내가 사용자에게 나가는 것보다, 시작할 때 바로 알아차리는 게 안전해서요)
  */
 @Slf4j
@@ -47,7 +47,7 @@ public class GuideService {
 		return guides.get(type);
 	}
 
-	/** 4개 유형 안내 전체 (CROSSWALK, SIDEWALK, HYDRANT, NORMAL 순서) */
+	/** 5개 유형 안내 전체 (CROSSWALK, SIDEWALK, HYDRANT, OTHER, NORMAL 순서) */
 	public List<Guide> getAllGuides() {
 		return List.copyOf(guides.values());
 	}
@@ -86,7 +86,7 @@ public class GuideService {
 			throw new IllegalStateException("guides.json에 guides가 없어요.");
 		}
 
-		// 오타 방지: 4개 유형 이름이 아닌 키가 있으면 알려 줘요.
+		// 오타 방지: 5개 유형 이름이 아닌 키가 있으면 알려 줘요.
 		for (String key : file.guides().keySet()) {
 			if (!isViolationType(key)) {
 				problems.add("알 수 없는 유형 이름이에요: " + key);

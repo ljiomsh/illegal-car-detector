@@ -12,9 +12,9 @@ import jakarta.validation.ConstraintValidatorContext;
 
 /**
  * 판별 요청의 확률이 앞뒤가 맞는지 검사해요.
- * 1) probabilities에 CROSSWALK, SIDEWALK, HYDRANT, NORMAL 4개 키가 정확히 있는지
+ * 1) probabilities에 5개 유형(CROSSWALK, SIDEWALK, HYDRANT, OTHER, NORMAL) 키가 정확히 있는지
  * 2) 각 확률이 0 이상 1 이하인지
- * 3) 4개 확률의 합이 1인지 (반올림 오차를 생각해서 ±0.02까지 허용)
+ * 3) 확률의 합이 1인지 (반올림 오차를 생각해서 ±0.02까지 허용)
  * 4) label의 확률이 가장 큰지
  * 5) confidence가 label의 확률과 같은지 (±0.001까지 허용)
  * 문제가 있으면 어느 필드인지(probabilities / confidence) 알려 줘요.
@@ -28,6 +28,11 @@ public class ProbabilitiesValidator implements ConstraintValidator<ValidProbabil
 			.map(Enum::name)
 			.collect(Collectors.toUnmodifiableSet());
 
+	// 안내 문구: "CROSSWALK, SIDEWALK, HYDRANT, OTHER, NORMAL 5개 키가 정확히 있어야 해요."
+	private static final String KEYS_MESSAGE = Arrays.stream(ViolationType.values())
+			.map(Enum::name)
+			.collect(Collectors.joining(", ")) + " " + ViolationType.values().length + "개 키가 정확히 있어야 해요.";
+
 	@Override
 	public boolean isValid(JudgmentRequest request, ConstraintValidatorContext context) {
 		Map<String, Double> probabilities = request.probabilities();
@@ -39,8 +44,7 @@ public class ProbabilitiesValidator implements ConstraintValidator<ValidProbabil
 		}
 
 		if (!probabilities.keySet().equals(REQUIRED_KEYS)) {
-			return fail(context, "probabilities",
-					"CROSSWALK, SIDEWALK, HYDRANT, NORMAL 4개 키가 정확히 있어야 해요.");
+			return fail(context, "probabilities", KEYS_MESSAGE);
 		}
 
 		double sum = 0;
@@ -52,7 +56,7 @@ public class ProbabilitiesValidator implements ConstraintValidator<ValidProbabil
 		}
 
 		if (Math.abs(sum - 1.0) > SUM_TOLERANCE) {
-			return fail(context, "probabilities", "4개 확률의 합이 1이어야 해요.");
+			return fail(context, "probabilities", "확률의 합이 1이어야 해요.");
 		}
 
 		double labelProbability = probabilities.get(request.label().name());

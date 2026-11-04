@@ -11,7 +11,7 @@ import com.hwanil.illegalcardetector.common.ViolationType;
 
 /**
  * 유형별 안내 조회 API
- * - GET /api/guides         : 4개 유형 전체
+ * - GET /api/guides         : 5개 유형 전체
  * - GET /api/guides/{type}  : 유형 하나 (없는 유형 이름이면 400)
  */
 @RestController

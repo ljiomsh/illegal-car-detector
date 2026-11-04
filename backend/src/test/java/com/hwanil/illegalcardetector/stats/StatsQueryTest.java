@@ -14,6 +14,8 @@ import com.hwanil.illegalcardetector.common.ViolationType;
 import com.hwanil.illegalcardetector.judgment.Judgment;
 import com.hwanil.illegalcardetector.judgment.JudgmentRepository;
 
+import jakarta.persistence.EntityManager;
+
 /**
  * 통계 집계 쿼리 테스트 (테스트용 메모리 DB에서 실제 쿼리를 실행해요)
  */
@@ -27,8 +29,11 @@ class StatsQueryTest {
 	@Autowired
 	private StatsService statsService;
 
+	@Autowired
+	private EntityManager entityManager;
+
 	@Test
-	void 기록이_없으면_4개_유형이_모두_0이고_정확도는_null() {
+	void 기록이_없으면_모든_유형이_0이고_정확도는_null() {
 		StatsResponse stats = statsService.getStats();
 
 		assertThat(stats.total()).isZero();
@@ -44,6 +49,7 @@ class StatsQueryTest {
 		Judgment crosswalk2 = save(ViolationType.CROSSWALK);
 		Judgment normal = save(ViolationType.NORMAL);
 		save(ViolationType.CROSSWALK);
+		save(ViolationType.OTHER);
 		// SIDEWALK, HYDRANT는 0건
 
 		crosswalk1.applyFeedback(true, null);
@@ -53,11 +59,12 @@ class StatsQueryTest {
 
 		StatsResponse stats = statsService.getStats();
 
-		assertThat(stats.total()).isEqualTo(4);
+		assertThat(stats.total()).isEqualTo(5);
 		assertThat(stats.byType()).containsExactlyInAnyOrderEntriesOf(Map.of(
 				ViolationType.CROSSWALK, 3L,
 				ViolationType.SIDEWALK, 0L,
 				ViolationType.HYDRANT, 0L,
+				ViolationType.OTHER, 1L,
 				ViolationType.NORMAL, 1L));
 		assertThat(stats.feedbackCount()).isEqualTo(3);
 		assertThat(stats.feedbackAccuracy()).isCloseTo(2.0 / 3, within(1e-9));
@@ -81,7 +88,23 @@ class StatsQueryTest {
 				ViolationType.CROSSWALK, label == ViolationType.CROSSWALK ? 0.85 : 0.05,
 				ViolationType.SIDEWALK, label == ViolationType.SIDEWALK ? 0.85 : 0.05,
 				ViolationType.HYDRANT, label == ViolationType.HYDRANT ? 0.85 : 0.05,
+				ViolationType.OTHER, label == ViolationType.OTHER ? 0.85 : 0.05,
 				ViolationType.NORMAL, label == ViolationType.NORMAL ? 0.85 : 0.05);
 		return judgmentRepository.save(Judgment.create(label, 0.85, probabilities, "test"));
+	}
+
+	@Test
+	void 기타_유형이_생기기_전_기록은_기타_확률을_0으로_돌려준다() {
+		Judgment saved = judgmentRepository.saveAndFlush(save(ViolationType.CROSSWALK));
+		// 예전 기록처럼 DB의 prob_other 칸을 비워요(null).
+		entityManager.createQuery("update Judgment j set j.probOther = null where j.id = :id")
+				.setParameter("id", saved.getId())
+				.executeUpdate();
+		entityManager.clear();
+
+		Judgment old = judgmentRepository.findById(saved.getId()).orElseThrow();
+		assertThat(old.getProbabilities())
+				.containsEntry(ViolationType.OTHER.name(), 0.0)
+				.containsOnlyKeys("CROSSWALK", "SIDEWALK", "HYDRANT", "OTHER", "NORMAL");
 	}
 }

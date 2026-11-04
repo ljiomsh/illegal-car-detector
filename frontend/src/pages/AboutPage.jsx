@@ -38,15 +38,15 @@ const LIMITS = [
 const MODEL_INFO = [
   { term: '모델', value: `${AI_MODEL_NAME} (${AI_PROVIDER})` },
   { term: '종류', value: '사진을 볼 수 있는 대규모 언어 모델(비전 LLM)' },
-  { term: '판별 방법', value: '라벨링 기준서의 4가지 정의를 AI에게 알려 주고, 유형별 확률과 판단 근거를 받아요.' },
+  { term: '판별 방법', value: '라벨링 기준서의 5가지 정의를 AI에게 알려 주고, 유형별 확률과 판단 근거를 받아요.' },
   { term: '사진 저장', value: '저장하지 않아요 (판별 결과 숫자만 기록)' },
 ];
 
 export default function AboutPage() {
   return (
     <div className={styles.page}>
-      <title>소개 | 불법 주정차 판별·신고 도우미</title>
-      <h1 tabIndex={-1} className={styles.heading}>서비스 소개</h1>
+      <title>소개 | 길터</title>
+      <h1 tabIndex={-1} className={styles.heading}>길터 소개</h1>
 
       <section className={styles.card} aria-labelledby="purpose-title">
         <h2 id="purpose-title" className={styles.title}>

@@ -1,4 +1,4 @@
-// 4가지 유형의 확률을 막대그래프로 보여 줘요. (높은 순서대로, 한 줄에 이름 | 막대 | %)
+// 유형별 확률을 막대그래프로 보여 줘요. (높은 순서대로, 한 줄에 이름 | 막대 | %)
 // 1위 막대만 유형 색으로 칠하고, 나머지는 회색이에요. 숫자(%)도 항상 같이 보여 줘요.
 import { getViolationType, LABELS, toPercent } from '../constants/violationTypes';
 import styles from './ProbabilityBars.module.css';

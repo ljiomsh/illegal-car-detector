@@ -2,8 +2,9 @@
 // icon은 components/Icon.jsx의 아이콘 이름이에요. (<Icon name={type.icon} />)
 // chartColor는 기록 화면의 유형별 막대 색이에요. (서로 밝기가 달라서 색약이어도 구분돼요)
 
-// AI 모델이 내놓는 라벨 4가지 (순서 = 화면에 보여 주는 기본 순서)
-export const LABELS = ['CROSSWALK', 'SIDEWALK', 'HYDRANT', 'NORMAL'];
+// AI 모델이 내놓는 라벨 5가지 (순서 = 화면에 보여 주는 기본 순서)
+// 백엔드 common/ViolationType.java와 이름·순서가 같아야 해요.
+export const LABELS = ['CROSSWALK', 'SIDEWALK', 'HYDRANT', 'OTHER', 'NORMAL'];
 
 export const VIOLATION_TYPES = {
   CROSSWALK: {
@@ -37,6 +38,18 @@ export const VIOLATION_TYPES = {
     icon: 'hydrant',
     chartColor: '#f76b15',
     description: '소화전 가까이(약 5m 이내)에 서 있어요',
+    violation: true,
+    color: 'var(--color-danger)',
+    textColor: 'var(--color-danger-text)',
+    softColor: 'var(--color-danger-soft)',
+  },
+  OTHER: {
+    label: 'OTHER',
+    name: '기타',
+    title: '기타 불법 주정차',
+    icon: 'noParking',
+    chartColor: '#8e4ec6',
+    description: '교차로 모퉁이·버스 정류소 등에 서 있어요',
     violation: true,
     color: 'var(--color-danger)',
     textColor: 'var(--color-danger-text)',

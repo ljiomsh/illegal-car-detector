@@ -38,7 +38,9 @@ export default function App() {
 
       <header className={styles.header}>
         <Link to="/" className={styles.logo}>
-          <Icon name="car" /> 불법 주정차 판별·신고 도우미
+          <Icon name="car" size={22} />
+          <span className={styles.brand}>길터</span>
+          <span className={styles.tagline}>불법 주정차 판별·신고 도우미</span>
         </Link>
       </header>
 

@@ -41,7 +41,7 @@ public class Judgment {
 	@Column(nullable = false)
 	private double confidence;
 
-	// 4가지 확률을 고정된 4개 칸에 저장해요. (H2·PostgreSQL 모두 같은 방식으로 동작)
+	// 5가지 확률을 고정된 칸에 하나씩 저장해요. (H2·PostgreSQL 모두 같은 방식으로 동작)
 	@Column(nullable = false)
 	private double probCrosswalk;
 
@@ -50,6 +50,9 @@ public class Judgment {
 
 	@Column(nullable = false)
 	private double probHydrant;
+
+	// '기타'는 나중에 추가한 유형이라, 그 전 기록에는 값이 없어요(null). 읽을 때 0으로 바꿔요.
+	private Double probOther;
 
 	@Column(nullable = false)
 	private double probNormal;
@@ -69,7 +72,7 @@ public class Judgment {
 
 	private Instant feedbackAt;
 
-	/** 새 판별 기록을 만들어요. probabilities는 4개 유형의 확률이에요. */
+	/** 새 판별 기록을 만들어요. probabilities는 5개 유형의 확률이에요. */
 	public static Judgment create(ViolationType label, double confidence,
 			Map<ViolationType, Double> probabilities, String modelVersion) {
 		Judgment judgment = new Judgment();
@@ -78,6 +81,7 @@ public class Judgment {
 		judgment.probCrosswalk = probabilities.get(ViolationType.CROSSWALK);
 		judgment.probSidewalk = probabilities.get(ViolationType.SIDEWALK);
 		judgment.probHydrant = probabilities.get(ViolationType.HYDRANT);
+		judgment.probOther = probabilities.getOrDefault(ViolationType.OTHER, 0.0);
 		judgment.probNormal = probabilities.get(ViolationType.NORMAL);
 		judgment.modelVersion = modelVersion;
 		return judgment;
@@ -93,12 +97,13 @@ public class Judgment {
 		this.feedbackAt = Instant.now();
 	}
 
-	/** 4개 확률을 { "CROSSWALK": 0.9, ... } 모양으로 돌려줘요. */
+	/** 5개 확률을 { "CROSSWALK": 0.9, ... } 모양으로 돌려줘요. */
 	public Map<String, Double> getProbabilities() {
 		Map<String, Double> probabilities = new LinkedHashMap<>();
 		probabilities.put(ViolationType.CROSSWALK.name(), probCrosswalk);
 		probabilities.put(ViolationType.SIDEWALK.name(), probSidewalk);
 		probabilities.put(ViolationType.HYDRANT.name(), probHydrant);
+		probabilities.put(ViolationType.OTHER.name(), probOther == null ? 0.0 : probOther);
 		probabilities.put(ViolationType.NORMAL.name(), probNormal);
 		return probabilities;
 	}

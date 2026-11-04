@@ -65,7 +65,7 @@ export default function HistoryPage() {
 
   return (
     <div className={styles.page}>
-      <title>판별 기록 | 불법 주정차 판별·신고 도우미</title>
+      <title>판별 기록 | 길터</title>
       <h1 ref={headingRef} tabIndex={-1} className={styles.heading}>
         판별 기록
       </h1>

@@ -14,8 +14,8 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * AI가 보낸 글(content)에서 판별 결과 JSON을 꺼내고, 값을 검사·보정해요.
  * - <think>...</think> 같은 생각 과정이나 ```json 코드펜스가 붙어 있어도 첫 번째 JSON 객체만 꺼내요.
- * - label이 4개 유형이 아니면 실패해요.
- * - 확률은 4개 키를 모두 채우고(없으면 0), 합이 1이 되게 맞춰요. 합이 0이면 label에 1.0을 줘요.
+ * - label이 5개 유형이 아니면 실패해요.
+ * - 확률은 5개 키를 모두 채우고(없으면 0), 합이 1이 되게 맞춰요. 합이 0이면 label에 1.0을 줘요.
  * - label의 확률이 가장 크지 않으면, 가장 큰 값과 label의 값을 서로 바꿔요. (화면과 기록 API가 "label = 최댓값"을 전제로 해요)
  * - confidence는 label의 확률로 다시 계산해요.
  */
@@ -115,7 +115,7 @@ public class AnalysisParser {
 				return type;
 			}
 		}
-		throw new AiUnavailableException("AI 응답의 label이 4가지 유형이 아니에요: " + text);
+		throw new AiUnavailableException("AI 응답의 label이 5가지 유형이 아니에요: " + text);
 	}
 
 	private static Map<ViolationType, Double> normalize(JsonNode node, ViolationType label) {

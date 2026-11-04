@@ -43,7 +43,7 @@ class JudgmentControllerTest {
 
 	private static final String VALID_BODY = """
 			{ "label": "CROSSWALK", "confidence": 0.92,
-			  "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "NORMAL": 0.01 },
+			  "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "OTHER": 0.0, "NORMAL": 0.01 },
 			  "modelVersion": "v1" }
 			""";
 
@@ -68,7 +68,7 @@ class JudgmentControllerTest {
 	void modelVersion은_없어도_된다() throws Exception {
 		postJudgment("""
 				{ "label": "NORMAL", "confidence": 0.5,
-				  "probabilities": { "CROSSWALK": 0.2, "SIDEWALK": 0.2, "HYDRANT": 0.1, "NORMAL": 0.5 } }
+				  "probabilities": { "CROSSWALK": 0.2, "SIDEWALK": 0.2, "HYDRANT": 0.1, "OTHER": 0.0, "NORMAL": 0.5 } }
 				""")
 				.andExpect(status().isCreated());
 	}
@@ -100,19 +100,19 @@ class JudgmentControllerTest {
 	void 확률_합계가_1이_아니면_400() throws Exception {
 		postJudgment("""
 				{ "label": "CROSSWALK", "confidence": 0.9,
-				  "probabilities": { "CROSSWALK": 0.9, "SIDEWALK": 0.5, "HYDRANT": 0.1, "NORMAL": 0.1 } }
+				  "probabilities": { "CROSSWALK": 0.9, "SIDEWALK": 0.5, "HYDRANT": 0.1, "OTHER": 0.0, "NORMAL": 0.1 } }
 				""")
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
 				.andExpect(jsonPath("$.fieldErrors[0].field").value("probabilities"))
-				.andExpect(jsonPath("$.fieldErrors[0].message").value("4개 확률의 합이 1이어야 해요."));
+				.andExpect(jsonPath("$.fieldErrors[0].message").value("확률의 합이 1이어야 해요."));
 	}
 
 	@Test
 	void label의_확률이_최댓값이_아니면_400() throws Exception {
 		postJudgment("""
 				{ "label": "HYDRANT", "confidence": 0.1,
-				  "probabilities": { "CROSSWALK": 0.7, "SIDEWALK": 0.1, "HYDRANT": 0.1, "NORMAL": 0.1 } }
+				  "probabilities": { "CROSSWALK": 0.7, "SIDEWALK": 0.1, "HYDRANT": 0.1, "OTHER": 0.0, "NORMAL": 0.1 } }
 				""")
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.fieldErrors[0].field").value("probabilities"));

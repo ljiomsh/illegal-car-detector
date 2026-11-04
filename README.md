@@ -1,4 +1,4 @@
-# illegal-car-detector — 불법 주정차 판별·신고 도우미
+# 길터 (illegal-car-detector) — 불법 주정차 판별·신고 도우미
 
 환일고 「환일야호」 팀 · 2026 AI동행 프로젝트 자율탐구 출품작
 
@@ -11,7 +11,7 @@
 
 사진을 서버(`/api/analyze`)로 보내면, 서버가 **사진을 볼 수 있는 대규모 언어 모델(비전 LLM)** 에 판별을 맡겨요.
 - 모델: NVIDIA Build의 **Nemotron 3 Nano Omni** (`nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`) (`backend/src/main/resources/application.yaml`의 `nvidia.model`에서 바꿀 수 있어요)
-- 판별 기준: 기획서의 라벨링 기준서(횡단보도 위 / 인도 위 / 소화전 주변 / 정상 주차) 정의를 프롬프트로 알려 줘요.
+- 판별 기준: 기획서의 라벨링 기준서(횡단보도 위 / 인도 위 / 소화전 주변 / 기타 불법 주정차 / 정상 주차) 정의를 프롬프트로 알려 줘요.
 - AI는 유형별 확률과 판단 근거(한두 문장)를 JSON으로 답하고, 서버가 값을 검사·보정해서 화면에 보내요.
 - 사진은 우리 서버에 저장하지 않아요. 판별 결과 숫자만 기록해요.
 
@@ -74,7 +74,7 @@ npm run dev
 
 | 주소 | 결과 |
 |---|---|
-| `http://localhost:5173/check?mock=CROSSWALK` | 횡단보도 (SIDEWALK, HYDRANT, NORMAL도 가능) |
+| `http://localhost:5173/check?mock=CROSSWALK` | 횡단보도 (SIDEWALK, HYDRANT, OTHER, NORMAL도 가능) |
 | `http://localhost:5173/check?mock=MEDIUM` | 확신 보통 화면 |
 | `http://localhost:5173/check?mock=LOW` | 다시 찍기 안내 화면 |
 

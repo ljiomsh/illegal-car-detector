@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Size;
 /**
  * POST /api/judgments 요청 본문 (/api/analyze가 돌려준 판별 결과를 프론트가 그대로 보내요)
  * 예: { "label": "CROSSWALK", "confidence": 0.92,
- *       "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "NORMAL": 0.01 },
+ *       "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "OTHER": 0.0, "NORMAL": 0.01 },
  *       "modelVersion": "deepseek-v4.1-flash" }
  *
  * 하나씩 보는 검사는 각 필드의 어노테이션이 하고,
@@ -30,7 +30,7 @@ public record JudgmentRequest(
 		@DecimalMax(value = "1.0", message = "0 이상 1 이하여야 해요.")
 		Double confidence,
 
-		@NotNull(message = "4가지 유형의 확률(probabilities)이 필요해요.")
+		@NotNull(message = "5가지 유형의 확률(probabilities)이 필요해요.")
 		Map<String, Double> probabilities,
 
 		@Size(max = 20, message = "20자 이하여야 해요.")

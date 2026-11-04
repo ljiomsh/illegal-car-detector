@@ -96,7 +96,7 @@
   word-break: keep-all;
 }
 
-/* 4가지 유형 (알려 주기만 하고 누르지는 않아요) */
+/* 5가지 유형 (알려 주기만 하고 누르지는 않아요) */
 .typeGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

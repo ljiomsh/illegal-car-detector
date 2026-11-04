@@ -1,8 +1,8 @@
-# 불법 주정차 판별·신고 도우미 — 백엔드 (Spring Boot)
+# 길터 — 불법 주정차 판별·신고 도우미 백엔드 (Spring Boot)
 
 환일고 「환일야호」 팀 · 2026 AI동행 프로젝트 자율탐구 출품작
 
-이 서버는 ① 사진을 비전 LLM(NVIDIA Build · Nemotron 3 Nano Omni)에 보내 4가지 유형으로 판별하고
+이 서버는 ① 사진을 비전 LLM(NVIDIA Build · Nemotron 3 Nano Omni)에 보내 5가지 유형으로 판별하고
 ② 유형별 안내(위험한 이유·신고 요건·신고 방법)를 돌려주고 ③ 판별 기록과 피드백을 저장하고 ④ 통계를 보여 줘요.
 
 > **개인정보 원칙**: 사진은 판별할 때만 NVIDIA로 보내고, 저장하지도 로그에 남기지도 않아요.
@@ -83,17 +83,17 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 | POST | `/api/judgments` | 판별 결과 저장 + 유형별 안내 | 201 |
 | GET | `/api/judgments?limit=20` | 최근 기록, 최신순 (limit 1~100, 기본 20) | 200 |
 | POST | `/api/judgments/{id}/feedback` | 피드백 저장 (다시 보내면 덮어써요) | 204 |
-| GET | `/api/guides` | 4개 유형 안내 전체 | 200 |
+| GET | `/api/guides` | 5개 유형 안내 전체 | 200 |
 | GET | `/api/guides/{type}` | 유형 하나 안내 (예: `/api/guides/HYDRANT`) | 200 |
 | GET | `/api/stats` | 통계 | 200 |
 
-유형(type, label)은 `CROSSWALK`(횡단보도), `SIDEWALK`(인도), `HYDRANT`(소화전), `NORMAL`(정상) 중 하나이고,
+유형(type, label)은 `CROSSWALK`(횡단보도), `SIDEWALK`(인도), `HYDRANT`(소화전), `OTHER`(기타 불법 주정차), `NORMAL`(정상) 중 하나이고,
 **대문자로 정확히** 써야 해요.
 
 ### POST /api/analyze — AI 사진 판별
 
 사진을 받아 NVIDIA Build API의 비전 LLM으로 판별해요. **사진은 저장하지 않고 로그에도 남기지 않아요.**
-판별 기준은 라벨링 기준서의 4가지 정의를 프롬프트로 알려 줘요. (`NvidiaVisionClient.PROMPT`)
+판별 기준은 라벨링 기준서의 5가지 정의를 프롬프트로 알려 줘요. (`NvidiaVisionClient.PROMPT`)
 
 - 설정: `src/main/resources/application.yaml`
   ```yaml
@@ -130,12 +130,12 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 응답 200:
 ```json
 { "label": "CROSSWALK", "confidence": 0.86,
-  "probabilities": { "CROSSWALK": 0.86, "SIDEWALK": 0.08, "HYDRANT": 0.02, "NORMAL": 0.04 },
+  "probabilities": { "CROSSWALK": 0.86, "SIDEWALK": 0.08, "HYDRANT": 0.02, "OTHER": 0.0, "NORMAL": 0.04 },
   "reason": "차량 앞부분이 횡단보도 흰 줄 위에 걸쳐 있어요.",
   "modelVersion": "nemotron-3-nano-omni" }
 ```
 - AI 답에 `<think>…</think>`나 ```` ```json ```` 코드펜스가 붙어도 첫 번째 JSON 객체만 꺼내요.
-- 확률은 4개를 모두 채우고(없으면 0) 합이 1이 되게 맞춰요. 합이 0이면 label에 1.0을 줘요.
+- 확률은 5개를 모두 채우고(없으면 0) 합이 1이 되게 맞춰요. 합이 0이면 label에 1.0을 줘요.
 - label의 확률이 가장 크지 않으면 가장 큰 값과 서로 바꿔요. (화면과 `/api/judgments`가 "label = 최댓값"을 전제로 해요)
 - `confidence`는 label의 확률로 다시 계산해요.
 - 요청에 `chat_template_kwargs: {"thinking": false, "enable_thinking": false}`를 넣어 모델의 생각 과정을 꺼요.
@@ -159,15 +159,15 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 {
   "label": "CROSSWALK",
   "confidence": 0.92,
-  "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "NORMAL": 0.01 },
+  "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "OTHER": 0.0, "NORMAL": 0.01 },
   "modelVersion": "nemotron-3-nano-omni"
 }
 ```
 
 검사 규칙 (어기면 400):
-- `label`: 4개 유형 중 하나
+- `label`: 5개 유형 중 하나
 - `confidence`: 0 이상 1 이하
-- `probabilities`: 4개 키가 정확히 있어야 하고, 각 값은 0~1, 합계는 1(±0.02).
+- `probabilities`: 5개 키가 정확히 있어야 하고, 각 값은 0~1, 합계는 1(±0.02).
   `label`의 확률이 가장 커야 하고, `confidence`와 같아야 해요(±0.001).
 - `modelVersion`: 없어도 돼요. 있으면 20자 이하, 영문·숫자·`.`·`-`만 쓸 수 있어요.
 
@@ -198,7 +198,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
     "label": "CROSSWALK",
     "confidence": 0.92,
     "confidenceLevel": "HIGH",
-    "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "NORMAL": 0.01 },
+    "probabilities": { "CROSSWALK": 0.92, "SIDEWALK": 0.05, "HYDRANT": 0.02, "OTHER": 0.0, "NORMAL": 0.01 },
     "modelVersion": "nemotron-3-nano-omni",
     "createdAt": "2026-10-16T09:12:00.123456Z",
     "feedback": { "correct": false, "actualLabel": "SIDEWALK", "createdAt": "2026-10-16T09:13:10.5Z" }
@@ -223,12 +223,12 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 ```json
 {
   "total": 120,
-  "byType": { "CROSSWALK": 30, "SIDEWALK": 40, "HYDRANT": 10, "NORMAL": 40 },
+  "byType": { "CROSSWALK": 30, "SIDEWALK": 40, "HYDRANT": 10, "OTHER": 5, "NORMAL": 35 },
   "feedbackCount": 25,
   "feedbackAccuracy": 0.84
 }
 ```
-- `byType`에는 0건인 유형도 항상 4개가 모두 들어 있어요.
+- `byType`에는 0건인 유형도 항상 5개가 모두 들어 있어요.
 - `feedbackAccuracy` = 맞았다는 피드백 수 ÷ 피드백 수. 피드백이 0건이면 `null`이에요.
 - DB 집계 쿼리(GROUP BY, COUNT)로 계산해요.
 
@@ -258,7 +258,7 @@ java -jar build\libs\illegalcardetector-0.0.1-SNAPSHOT.jar
 `curl`을 쓸 때 PowerShell은 JSON 안의 큰따옴표를 망가뜨리니, JSON을 파일로 저장해서 보내세요.
 
 ```powershell
-Set-Content -Encoding utf8 req.json '{"label":"CROSSWALK","confidence":0.92,"probabilities":{"CROSSWALK":0.92,"SIDEWALK":0.05,"HYDRANT":0.02,"NORMAL":0.01},"modelVersion":"nemotron-3-nano-omni"}'
+Set-Content -Encoding utf8 req.json '{"label":"CROSSWALK","confidence":0.92,"probabilities":{"CROSSWALK":0.92,"SIDEWALK":0.05,"HYDRANT":0.02,"OTHER":0.0,"NORMAL":0.01},"modelVersion":"nemotron-3-nano-omni"}'
 curl.exe -X POST http://localhost:8080/api/judgments -H "Content-Type: application/json" --data "@req.json"
 curl.exe http://localhost:8080/api/stats
 ```
@@ -326,7 +326,7 @@ curl.exe http://localhost:8080/api/stats
       "checklist": [{ "id": "plate", "text": "..." }], // 신고 전 확인 목록 (id는 겹치지 않는 영어 이름)
       "reportSteps": ["...", "..."]                   // 신고 방법 단계
     },
-    "SIDEWALK": { ... }, "HYDRANT": { ... }, "NORMAL": { ... }
+    "SIDEWALK": { ... }, "HYDRANT": { ... }, "OTHER": { ... }, "NORMAL": { ... }
   }
 }
 ```
@@ -339,7 +339,7 @@ curl.exe http://localhost:8080/api/stats
 4. `.\gradlew.bat test`로 확인하면 더 안전해요.
 
 **서버가 켜지지 않으면** 로그에 `guides.json에 문제가 있어요: ...`가 나와요. 무엇이 문제인지 적혀 있어요.
-- 4개 유형(`CROSSWALK`, `SIDEWALK`, `HYDRANT`, `NORMAL`)이 모두 있어야 해요. 이름에 오타가 있어도 안 돼요.
+- 5개 유형(`CROSSWALK`, `SIDEWALK`, `HYDRANT`, `OTHER`, `NORMAL`)이 모두 있어야 해요. 이름에 오타가 있어도 안 돼요.
 - `title`, `violation`, `dangerReasons`는 비우면 안 돼요.
 - 위반 유형(`violation: true`)은 `checklist`와 `reportSteps`도 비우면 안 돼요.
 - 쉼표나 따옴표가 빠지면 `guides.json을 읽지 못했어요`가 나와요.
@@ -354,7 +354,7 @@ curl.exe http://localhost:8080/api/stats
 src/main/java/com/hwanil/illegalcardetector/
 ├─ IllegalcardetectorApplication.java
 ├─ common/
-│  ├─ ViolationType.java            # 4가지 유형
+│  ├─ ViolationType.java            # 5가지 유형
 │  ├─ ConfidenceLevel.java          # HIGH/MEDIUM/LOW 기준 (0.7, 0.4)
 │  ├─ ErrorResponse.java            # 에러 응답 모양
 │  ├─ NotFoundException.java        # 404용 예외
@@ -389,7 +389,7 @@ src/main/resources/
   - 검증 실패 400: 확신도 범위, 확률 키 누락, 합계 오류, 최댓값·확신도 불일치, 잘못된 label, modelVersion 형식, 깨진 JSON, limit 범위
   - 피드백 204·404, 500일 때 내부 메시지 숨김
 - `StatsQueryTest`(@DataJpaTest): 0건 유형 포함 집계, 피드백 정확도, 피드백 덮어쓰기
-- `GuideServiceTest`: 4개 유형 로딩, 유형이 빠지거나 필수 값이 비면 시작 실패
+- `GuideServiceTest`: 5개 유형 로딩, 유형이 빠지거나 필수 값이 비면 시작 실패
 - `AnalyzeControllerTest`(@WebMvcTest): 정상 판별 200, 사진이 아니면 400, AI 실패 502, 키 없음 503
 - `AnalysisParserTest`: 생각 과정·코드펜스 제거, 확률 채우기·정규화, label이 최댓값이 되게 보정, 잘못된 답은 실패
 - `NvidiaVisionClientTest`: 모델 이름 → 판별 기록용 `modelVersion` (회사 이름 빼기, 20자 제한)

@@ -38,14 +38,15 @@ public class NvidiaVisionClient {
 
 	/** 판별 프롬프트 (라벨링 기준서의 정의를 그대로 옮겼어요) */
 	static final String PROMPT = """
-			너는 불법 주정차 판별 도우미야. 사진 속 주차된 차량의 위치를 보고 아래 4가지 중 하나로 분류해.
+			너는 불법 주정차 판별 도우미야. 사진 속 주차된 차량의 위치를 보고 아래 5가지 중 하나로 분류해.
 			- CROSSWALK: 차체 일부라도 횡단보도 흰 줄 위에 있음 (정지선 뒤에 서 있으면 해당 안 됨)
 			- SIDEWALK: 바퀴가 보도(인도, 보도블록, 보도 턱 위)에 올라가 있음 (한쪽 바퀴만 걸쳐도 해당)
 			- HYDRANT: 소화전이 차량 바로 근처(약 5m 이내)에 보임
-			- NORMAL: 위 3가지에 해당하지 않음 (주차칸 안, 일반 도로변 등)
+			- OTHER: 위 3가지는 아니지만 다른 주정차 금지 장소에 서 있음 (교차로 모퉁이, 버스 정류소 표지 근처, 어린이보호구역 정문 앞, 소방차 전용구역, 도로 가장자리 노란 실선·겹선 위 등)
+			- NORMAL: 위 4가지에 해당하지 않음 (주차칸 안, 주차가 허용된 도로변 등)
 			차량이 없거나 사진이 불분명하면 가장 가능성 높은 것을 고르되 확률을 낮게 줘.
 			반드시 아래 형식의 JSON 하나만 출력하고 다른 말은 하지 마:
-			{"label":"CROSSWALK|SIDEWALK|HYDRANT|NORMAL","probabilities":{"CROSSWALK":0~1,"SIDEWALK":0~1,"HYDRANT":0~1,"NORMAL":0~1},"reason":"판단 근거를 한국어 한두 문장으로"}""";
+			{"label":"CROSSWALK|SIDEWALK|HYDRANT|OTHER|NORMAL","probabilities":{"CROSSWALK":0~1,"SIDEWALK":0~1,"HYDRANT":0~1,"OTHER":0~1,"NORMAL":0~1},"reason":"판단 근거를 한국어 한두 문장으로"}""";
 
 	private final JsonMapper jsonMapper;
 	private final String apiKey;

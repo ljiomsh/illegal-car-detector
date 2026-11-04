@@ -20,13 +20,14 @@ const COMMON_CHECKLIST = [
 ];
 
 // 공통 신고 단계. typeName 자리에 유형 이름이 들어가요.
+// (wholeStep이면 typeName 뒤에 "위반 유형 목록에서 "만 붙여서 그 단계 문장으로 써요)
 // 주민신고제 사진은 앱 카메라로만 찍을 수 있어서 웹사이트 대신 앱을 안내해요.
-function makeReportSteps(typeName) {
+function makeReportSteps(typeName, { wholeStep = false } = {}) {
   return [
     '휴대폰에서 안전신문고 앱을 열어요.',
     "'신고하기'를 눌러요.",
     "'불법 주정차'를 골라요.",
-    `위반 유형 목록에서 '${typeName}' 항목을 골라요.`,
+    wholeStep ? `위반 유형 목록에서 ${typeName}` : `위반 유형 목록에서 '${typeName}' 항목을 골라요.`,
     '앱 카메라로 차량 번호판과 위반 장소가 함께 보이게 1장을 찍고, 1분 이상 지난 뒤 같은 위치·같은 방향에서 1장을 더 찍어요.',
     '지도에서 위반 위치가 맞는지 확인해요.',
     '내용을 확인하고 제출해요. 찍은 다음 날까지 신고해야 해요.',
@@ -75,11 +76,33 @@ export const GUIDES = {
     ],
     reportSteps: makeReportSteps('소화전'),
   },
+  OTHER: {
+    title: '기타 불법 주정차',
+    violation: true,
+    dangerReasons: [
+      '교차로 모퉁이나 버스 정류소 가까이 세운 차는 다른 운전자와 보행자의 시야를 가려 사고 위험을 높여요.',
+      '버스가 정류소에 바짝 서지 못하면 승객이 차도로 내려가 타고 내려야 해서 위험해요.',
+      '어린이보호구역 정문 앞이나 소방차 전용구역을 막으면 어린이 안전과 긴급 출동이 위협받아요.',
+    ],
+    checklist: [
+      COMMON_CHECKLIST[0],
+      {
+        id: 'other-scene',
+        text: '주정차 금지를 알 수 있는 것(교차로 모퉁이, 버스 정류소 표지, 노란 선, 안내 표지판 등)과 차량이 한 사진에 함께 보이나요?',
+      },
+      COMMON_CHECKLIST[2],
+      { id: 'other-sign', text: '표지판이나 노면 표시로 그곳이 주정차 금지 구역인지 직접 확인했나요?' },
+    ],
+    reportSteps: makeReportSteps(
+      "상황에 맞는 항목(교차로 모퉁이, 버스 정류소, 어린이보호구역 등)을 골라요. 맞는 항목이 없으면 내용 칸에 상황을 적어요.",
+      { wholeStep: true },
+    ),
+  },
   NORMAL: {
     title: '정상 주차',
     violation: false,
     dangerReasons: [
-      'AI가 보기에는 횡단보도·인도·소화전 주변에 세운 차가 아니에요.',
+      'AI가 보기에는 주정차가 금지된 곳에 세운 차가 아니에요.',
       'AI의 판단은 참고용이에요. 표지판이나 노면 표시(노란 선 등)로 주정차가 금지된 곳일 수도 있어요.',
       '주변 표지판과 바닥 표시를 한 번 더 확인해 주세요.',
     ],

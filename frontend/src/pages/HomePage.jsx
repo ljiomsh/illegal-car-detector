@@ -1,4 +1,4 @@
-// 홈 화면 (/): 시작 버튼 + 진행 3단계 + 4가지 유형 + 판별 수 요약 + 개인정보 안내
+// 홈 화면 (/): 시작 버튼 + 진행 3단계 + 5가지 유형 + 판별 수 요약 + 개인정보 안내
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { getStats } from '../api/client';
@@ -10,7 +10,7 @@ import styles from './HomePage.module.css';
 // 판별이 어떻게 진행되는지 3단계
 const FLOW = [
   { title: '사진 찍기', text: '차와 주변이 함께 나오게' },
-  { title: 'AI 판별', text: '4가지 유형 중 하나로' },
+  { title: 'AI 판별', text: '5가지 유형 중 하나로' },
   { title: '신고 안내', text: '요건 확인 후 안전신문고로' },
 ];
 
@@ -33,7 +33,7 @@ export default function HomePage() {
 
   return (
     <div className={styles.page}>
-      <title>불법 주정차 판별·신고 도우미</title>
+      <title>길터 - 불법 주정차 판별·신고 도우미</title>
 
       <section className={styles.hero}>
         <h1 tabIndex={-1} className={styles.heading}>

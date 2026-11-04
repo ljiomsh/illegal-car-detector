@@ -74,6 +74,8 @@ class GuideServiceTest {
 				                  "checklist": [], "reportSteps": ["s"] },
 				    "HYDRANT": { "title": "소화전", "violation": true, "dangerReasons": ["a"],
 				                 "checklist": [{ "id": "plate", "text": "t" }], "reportSteps": ["s"] },
+				    "OTHER": { "title": "기타", "violation": true, "dangerReasons": ["a"],
+				               "checklist": [{ "id": "plate", "text": "t" }], "reportSteps": ["s"] },
 				    "NORMAL": { "title": "정상", "violation": false, "dangerReasons": ["a"],
 				                "checklist": [], "reportSteps": [] },
 				    "HYDRNAT": { "title": "오타" }

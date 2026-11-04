@@ -27,7 +27,7 @@ public class StatsService {
 
 	@Transactional(readOnly = true)
 	public StatsResponse getStats() {
-		// 0건인 유형도 응답에 나오도록 4개를 모두 0으로 채워 두고 시작해요.
+		// 0건인 유형도 응답에 나오도록 5개를 모두 0으로 채워 두고 시작해요.
 		Map<ViolationType, Long> byType = new EnumMap<>(ViolationType.class);
 		for (ViolationType type : ViolationType.values()) {
 			byType.put(type, 0L);

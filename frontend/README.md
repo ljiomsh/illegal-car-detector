@@ -1,8 +1,8 @@
-# 불법 주정차 판별·신고 도우미 (프론트엔드)
+# 길터 — 불법 주정차 판별·신고 도우미 (프론트엔드)
 
 환일고 「환일야호」 팀 · 2026 AI동행 프로젝트 자율탐구 출품작
 
-주차된 차와 주변이 함께 나온 사진을 올리면 AI가 아래 4가지 중 하나로 판별하고,
+주차된 차와 주변이 함께 나온 사진을 올리면 AI가 아래 5가지 중 하나로 판별하고,
 위험한 이유 · 신고 요건 체크리스트 · 안전신문고 신고 방법을 안내하는 웹 서비스예요.
 
 | 라벨 | 의미 |
@@ -10,6 +10,7 @@
 | `CROSSWALK` | 🚸 횡단보도 위 주정차 |
 | `SIDEWALK` | 🚶 인도 위 주정차 |
 | `HYDRANT` | 🧯 소화전 주변 주정차 |
+| `OTHER` | 🚫 기타 불법 주정차 (교차로 모퉁이, 버스 정류소, 어린이보호구역 정문 앞 등) |
 | `NORMAL` | ✅ 정상 주차 |
 
 > 사진 판별은 **서버(`../backend`)의 비전 LLM(NVIDIA Build · Nemotron 3 Nano Omni)** 이 해요.
@@ -68,7 +69,7 @@ VITE_USE_MOCK=false
 | 주소 | 결과 |
 |---|---|
 | `/check?mock` | 랜덤 결과 |
-| `/check?mock=CROSSWALK` | 횡단보도 0.9 (`SIDEWALK`, `HYDRANT`, `NORMAL`도 가능) |
+| `/check?mock=CROSSWALK` | 횡단보도 0.9 (`SIDEWALK`, `HYDRANT`, `OTHER`, `NORMAL`도 가능) |
 | `/check?mock=MEDIUM` | 최고 확률 0.55 → 주황색 "확신하지 못해요" 경고 + 2위 후보 표시 |
 | `/check?mock=LOW` | 최고 확률 0.35 → 결과 대신 "다시 찍기" 안내 |
 | `/check?mock=HYDRANT&api=fail` | 서버 저장이 실패해도 결과가 잘 나오는지 확인 (가짜 서버일 때만) |
@@ -85,7 +86,7 @@ src/
 ├─ main.jsx                 # 앱 시작점 (글꼴·스타일 불러오기, 라우터 감싸기)
 ├─ App.jsx                  # 공통 레이아웃: 위 헤더 + 아래 탭(홈/판별/기록/소개) + 페이지 주소 연결
 ├─ pages/
-│  ├─ HomePage.jsx          # /         소개, 시작 버튼, 4가지 유형 카드
+│  ├─ HomePage.jsx          # /         소개, 시작 버튼, 5가지 유형 카드
 │  ├─ CheckPage.jsx         # /check    판별 (select → preview → analyzing → result → guide)
 │  ├─ HistoryPage.jsx       # /history  유형별 통계 + 최근 기록
 │  └─ AboutPage.jsx         # /about    서비스·팀 소개, AI의 한계, AI 모델 정보
@@ -97,7 +98,7 @@ src/
 │  ├─ AnalyzingProgress.jsx # 분석 중 3단계 진행 상황 + 지난 시간 + 팁 + 취소
 │  ├─ ResultCard.jsx        # 결론(유형·확신도·썸네일) + 확신 보통 경고 + AI 판단 근거, 위험한 이유 카드
 │  ├─ Icon.jsx              # 선 아이콘 (이모지 대신 사용)
-│  ├─ ProbabilityBars.jsx   # 4가지 유형 확률 막대
+│  ├─ ProbabilityBars.jsx   # 5가지 유형 확률 막대
 │  ├─ Checklist.jsx         # 신고 요건 체크박스
 │  ├─ ReportGuide.jsx       # 신고 단계 + 안전신문고 링크
 │  ├─ FeedbackButton.jsx    # "판별이 틀렸어요"
@@ -137,9 +138,9 @@ src/
 ```js
 const result = await analyzePhoto(imgElement);
 // → {
-//   label: 'CROSSWALK' | 'SIDEWALK' | 'HYDRANT' | 'NORMAL',
+//   label: 'CROSSWALK' | 'SIDEWALK' | 'HYDRANT' | 'OTHER' | 'NORMAL',
 //   confidence: 0~1 (label의 확률 = 가장 높은 확률),
-//   probabilities: { CROSSWALK, SIDEWALK, HYDRANT, NORMAL },  // 합계 1
+//   probabilities: { CROSSWALK, SIDEWALK, HYDRANT, OTHER, NORMAL },  // 합계 1
 //   reason: 'AI가 말한 판단 근거' | null,
 //   modelVersion: 'nemotron-3-nano-omni'                      // 비상 시연 모드는 'demo'
 // }
@@ -170,7 +171,7 @@ const result = await analyzePhoto(imgElement);
 | `postJudgment(body)` | `POST /api/judgments`<br>`{ label, confidence, probabilities, modelVersion }` | `JudgmentResponse` |
 | `getJudgments({ limit })` | `GET /api/judgments?limit=20` | `Judgment[]` (최신순) |
 | `postFeedback(id, body)` | `POST /api/judgments/{id}/feedback`<br>`{ correct, actualLabel }` | 내용 없음 (204 가능) |
-| `getStats()` | `GET /api/stats` | `{ total, byType: { CROSSWALK: n, SIDEWALK: n, HYDRANT: n, NORMAL: n } }` |
+| `getStats()` | `GET /api/stats` | `{ total, byType: { CROSSWALK: n, SIDEWALK: n, HYDRANT: n, OTHER: n, NORMAL: n } }` |
 
 ```jsonc
 // JudgmentResponse
@@ -191,7 +192,7 @@ const result = await analyzePhoto(imgElement);
   "judgmentId": 42,
   "label": "CROSSWALK",
   "confidence": 0.9,
-  "probabilities": { "CROSSWALK": 0.9, "SIDEWALK": 0.05, "HYDRANT": 0.03, "NORMAL": 0.02 },
+  "probabilities": { "CROSSWALK": 0.9, "SIDEWALK": 0.05, "HYDRANT": 0.03, "OTHER": 0.0, "NORMAL": 0.02 },
   "modelVersion": "nemotron-3-nano-omni",
   "createdAt": "2026-10-15T09:30:00Z",
   "feedback": null                    // 또는 { "correct": false, "actualLabel": "SIDEWALK", "createdAt": "..." }
