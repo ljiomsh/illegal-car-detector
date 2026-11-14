@@ -15,7 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
  */
 class AnalysisParserTest {
 
-	private final AnalysisParser parser = new AnalysisParser(JsonMapper.builder().build(), "nemotron-3-nano-omni");
+	private final AnalysisParser parser = new AnalysisParser(JsonMapper.builder().build(), "claude-sonnet-5-5");
 
 	// 차가 있고 아무 위반 표시도 없는 checks. 필요한 칸만 바꿔서 써요.
 	private static String checks(String crosswalk, String sidewalk, String hydrant, String noParking, String vehicle) {
@@ -47,7 +47,7 @@ class AnalysisParserTest {
 		assertThat(result.probabilities()).containsOnlyKeys(ViolationType.values());
 		assertThat(result.reason()).isEqualTo("차량 앞부분이 횡단보도 흰 줄 위에 있어요. {참고}");
 		assertThat(result.checks()).containsEntry("crosswalk", "on").containsEntry("vehicle", "parked");
-		assertThat(result.modelVersion()).isEqualTo("nemotron-3-nano-omni");
+		assertThat(result.modelVersion()).isEqualTo("claude-sonnet-5-5");
 	}
 
 	@Test

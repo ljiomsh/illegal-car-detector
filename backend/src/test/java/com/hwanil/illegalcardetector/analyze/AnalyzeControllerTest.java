@@ -43,7 +43,7 @@ class AnalyzeControllerTest {
 						ViolationType.HYDRANT, 0.02, ViolationType.OTHER, 0.0, ViolationType.NORMAL, 0.04),
 				"흰 줄 위에 있어요.",
 				Map.of("vehicle", "parked", "crosswalk", "on", "sidewalk", "none", "hydrant", "none", "noParking", "none"),
-				"nemotron-3-nano-omni"));
+				"claude-sonnet-5-5"));
 
 		mockMvc.perform(multipart("/api/analyze").file(new MockMultipartFile("image", "a.jpg", "image/jpeg", JPEG)))
 				.andExpect(status().isOk())
@@ -51,7 +51,7 @@ class AnalyzeControllerTest {
 				.andExpect(jsonPath("$.probabilities.SIDEWALK").value(0.08))
 				.andExpect(jsonPath("$.reason").value("흰 줄 위에 있어요."))
 				.andExpect(jsonPath("$.checks.crosswalk").value("on"))
-				.andExpect(jsonPath("$.modelVersion").value("nemotron-3-nano-omni"));
+				.andExpect(jsonPath("$.modelVersion").value("claude-sonnet-5-5"));
 	}
 
 	@Test

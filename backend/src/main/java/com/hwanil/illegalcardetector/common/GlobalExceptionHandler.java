@@ -26,7 +26,7 @@ import tools.jackson.core.JacksonException;
  * - 400 VALIDATION_FAILED: 입력값 검증 실패 (어느 필드가 틀렸는지 fieldErrors에 담아요)
  * - 400 BAD_REQUEST: JSON 형식이 깨졌거나, 없는 유형 이름(enum) 등
  * - 404 NOT_FOUND / 405 METHOD_NOT_ALLOWED / 415 UNSUPPORTED_MEDIA_TYPE
- * - 502 AI_UNAVAILABLE: 외부 AI(NVIDIA) 분석 실패 / 503 AI_NOT_CONFIGURED: 서버에 API 키가 없음
+ * - 502 AI_UNAVAILABLE: 외부 AI(Claude·NVIDIA) 분석 실패 / 503 AI_NOT_CONFIGURED: 서버에 API 키가 없음
  * - 500 INTERNAL_ERROR: 그 밖의 서버 오류 (자세한 내용은 로그에만 남기고 응답에는 숨겨요)
  */
 @Slf4j
@@ -101,15 +101,15 @@ public class GlobalExceptionHandler {
 		return respond(400, "BAD_REQUEST", message, List.of(new ErrorResponse.FieldError("image", message)));
 	}
 
-	/** 사진 판별: 서버에 NVIDIA_API_KEY가 없을 때 */
+	/** 사진 판별: 서버에 AI API 키가 없을 때 */
 	@ExceptionHandler(AiNotConfiguredException.class)
 	public ResponseEntity<ErrorResponse> handleAiNotConfigured(AiNotConfiguredException ex) {
-		log.warn("AI 분석 요청을 받았지만 NVIDIA_API_KEY가 없어요.");
+		log.warn("AI 분석 요청을 받았지만 AI API 키가 없어요. (ANTHROPIC_API_KEY 또는 NVIDIA_API_KEY)");
 		return respond(503, "AI_NOT_CONFIGURED",
 				"지금은 AI 분석을 쓸 수 없어요. 서버에 AI 설정(API 키)이 필요해요.", List.of());
 	}
 
-	/** 사진 판별: NVIDIA 오류·시간 초과·이상한 응답 */
+	/** 사진 판별: AI 오류·시간 초과·이상한 응답 */
 	@ExceptionHandler(AiUnavailableException.class)
 	public ResponseEntity<ErrorResponse> handleAiUnavailable(AiUnavailableException ex) {
 		log.warn("AI 분석 실패: {}", ex.getMessage());

@@ -1,5 +1,5 @@
 // AI가 사진에서 확인한 것(checks)을 화면에 보여 줄 때 쓰는 이름표예요.
-// 키·값은 백엔드 NvidiaVisionClient.SYSTEM_PROMPT, AnalysisParser.CHECK_VALUES와 같아야 해요.
+// 키·값은 백엔드 VisionPrompts, AnalysisParser.CHECK_VALUES와 같아야 해요.
 // 서버는 이 확인 결과로 아래 순서의 규칙을 적용해 유형을 정해요:
 //   횡단보도 줄 위 → 소화전 5m 안 → 인도 위 → 횡단보도 10m 안·다른 금지 표시 → 정상
 

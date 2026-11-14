@@ -22,7 +22,7 @@ import tools.jackson.databind.json.JsonMapper;
  * - label의 확률이 가장 크지 않으면, 가장 큰 값과 label의 값을 서로 바꿔요. (화면과 기록 API가 "label = 최댓값"을 전제로 해요)
  * - confidence는 label의 확률로 다시 계산해요.
  *
- * 판별 규칙 (AI가 적은 checks로 서버가 한 번 더 확인해요. 기준은 NvidiaVisionClient.SYSTEM_PROMPT와 같아요)
+ * 판별 규칙 (AI가 적은 checks로 서버가 한 번 더 확인해요. 기준은 VisionPrompts의 판별 기준과 같아요)
  * - 유형: crosswalk "on" → 횡단보도, hydrant "near" → 소화전, sidewalk "on" → 인도,
  *         crosswalk "near"(횡단보도 10m 안)이거나 noParking이 "none"이 아님 → 기타, 그 밖 → 정상 (위에서부터 처음 맞는 것)
  *   소화전을 인도보다 먼저 봐요. 보도에서 찍은 소화전 사진을 AI가 "바퀴가 보도 위"로 자주 잘못 봐서예요. (평가사진 실측)
@@ -38,7 +38,7 @@ public class AnalysisParser {
 	/** 근거가 어긋나거나 애매할 때 확신도 최대값 (0.7 미만 = MEDIUM) */
 	static final double DOUBTFUL_MAX = 0.6;
 
-	/** checks에 쓸 수 있는 키와 값 (SYSTEM_PROMPT와 같아요) */
+	/** checks에 쓸 수 있는 키와 값 (VisionPrompts, ClaudeVisionClient.answerSchema()와 같아요) */
 	static final Map<String, Set<String>> CHECK_VALUES = checkValues();
 
 	private static final int MAX_REASON_LENGTH = 300;
@@ -48,7 +48,7 @@ public class AnalysisParser {
 	private final JsonMapper jsonMapper;
 	private final String modelVersion;
 
-	// modelVersion: 결과에 함께 담을 모델 이름 (NvidiaVisionClient.modelVersion())
+	// modelVersion: 결과에 함께 담을 모델 이름 (VisionClient.modelVersion())
 	public AnalysisParser(JsonMapper jsonMapper, String modelVersion) {
 		this.jsonMapper = jsonMapper;
 		this.modelVersion = modelVersion;

@@ -13,7 +13,7 @@
 | `OTHER` | 🚫 기타 불법 주정차 (교차로 모퉁이, 버스 정류소, 어린이보호구역 정문 앞 등) |
 | `NORMAL` | ✅ 정상 주차 |
 
-> 사진 판별은 **서버(`../backend`)의 비전 LLM(NVIDIA Build · Nemotron 3.5 Super VL)** 이 해요.
+> 사진 판별은 **서버(`../backend`)의 비전 LLM(Anthropic · Claude Sonnet 5.5)** 이 해요.
 > 화면은 사진을 줄여서 `/api/analyze`로 보내고, 받은 결과로 안내 화면을 보여 줘요.
 
 ---
@@ -30,7 +30,7 @@ npm run build    # 배포용 파일 만들기 → dist/ 폴더
 npm run preview  # 만든 배포용 파일을 미리 보기
 ```
 
-사진 판별에는 **백엔드가 꼭 켜져 있어야 해요.** 백엔드는 `NVIDIA_API_KEY`를 넣고 켜요.
+사진 판별에는 **백엔드가 꼭 켜져 있어야 해요.** 백엔드는 `ANTHROPIC_API_KEY`를 넣고 켜요.
 (자세한 순서는 [루트 README](../README.md))
 `vite.config.js`의 프록시가 `/api` 요청을 `http://localhost:8080`으로 넘겨줘요.
 
@@ -145,7 +145,7 @@ const result = await analyzePhoto(imgElement);
 //   probabilities: { CROSSWALK, SIDEWALK, HYDRANT, OTHER, NORMAL },  // 합계 1
 //   reason: 'AI가 말한 판단 근거' | null,
 //   checks: { vehicle, crosswalk, sidewalk, hydrant, noParking } | null,  // AI가 확인한 것
-//   modelVersion: 'nemotron-3.5-super-v'                      // 비상 시연 모드는 'demo'
+//   modelVersion: 'claude-sonnet-5-5'                         // 비상 시연 모드는 'demo'
 // }
 ```
 
@@ -155,7 +155,7 @@ const result = await analyzePhoto(imgElement);
 4. 실패하면 서버가 준 안내(400·502·503)나 "AI 분석에 실패했어요"를 보여 주고 **다시 시도** 버튼이 나와요.
 
 - 모델 이름을 화면에 보여 주는 문구는 `src/constants/aiInfo.js`에 있어요.
-  백엔드 `application.yaml`의 `nvidia.model`을 바꾸면 여기도 같이 바꿔 주세요.
+  백엔드 `application.yaml`의 `ai.provider`나 `claude.model`을 바꾸면 여기도 같이 바꿔 주세요.
 
 ### 3-2. 서버 (Spring Boot) — `src/api/client.js`
 
@@ -196,7 +196,7 @@ const result = await analyzePhoto(imgElement);
   "label": "CROSSWALK",
   "confidence": 0.9,
   "probabilities": { "CROSSWALK": 0.9, "SIDEWALK": 0.05, "HYDRANT": 0.03, "OTHER": 0.0, "NORMAL": 0.02 },
-  "modelVersion": "nemotron-3.5-super-v",
+  "modelVersion": "claude-sonnet-5-5",
   "createdAt": "2026-10-15T09:30:00Z",
   "feedback": null                    // 또는 { "correct": false, "actualLabel": "SIDEWALK", "createdAt": "..." }
 }
@@ -210,7 +210,7 @@ const result = await analyzePhoto(imgElement);
 
 ## 4. 알아 두면 좋은 점
 
-- **사진은 분석할 때만 외부 AI(NVIDIA Build)로 보내지고, 우리 서버에는 저장하지 않아요.**
+- **사진은 분석할 때만 외부 AI(Anthropic의 Claude)로 보내지고, 우리 서버에는 저장하지 않아요.**
   판별 기록에는 라벨·확률·모델 이름만 남아요. 번호판·얼굴이 보이지 않는 사진을 쓰도록 안내해요.
 - 확신도가 **LOW(0.4 미만)인 결과는 서버로 보내지 않아서 기록에 남지 않아요.** (서버는 LOW도 받으면 저장할 수 있어요.) 결과를 보여 주지 않고 다시 찍게 하므로,
   같은 차를 여러 번 찍었을 때 통계가 부풀려지지 않게 하려는 거예요.

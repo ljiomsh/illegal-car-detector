@@ -77,7 +77,7 @@ function realGetStats() {
 
 // ───────────── 화면에서 쓰는 함수 ─────────────
 
-// 외부 AI가 오래 걸릴 수 있어서 70초까지 기다려요. (서버는 NVIDIA를 60초까지 기다려요)
+// 외부 AI가 오래 걸릴 수 있어서 70초까지 기다려요. (서버는 Claude를 30초씩 두 번까지 기다려요)
 const ANALYZE_TIMEOUT_MS = 70_000;
 
 // 사진을 서버(/api/analyze)로 보내 AI 판별 결과를 받아요. (api/analyzePhoto.js가 써요)
