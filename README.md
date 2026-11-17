@@ -91,6 +91,23 @@ npm run dev
 
 ---
 
+## 인터넷에 공개하기 (Netlify + 내 PC 백엔드)
+
+주소: **https://gilltoe.netlify.app**
+
+- **화면**은 Netlify가 GitHub의 `main`을 받아 자동으로 빌드·배포해요. (설정: 루트의 `netlify.toml`)
+- **사진 판별·기록(`/api`)** 은 내 PC의 백엔드가 해요. Netlify가 `/api` 요청을 cloudflared 터널 주소로 넘겨줘요.
+  그래서 **발표·시연 동안 PC에서 백엔드와 터널이 켜져 있어야 해요.**
+
+켜는 순서 (PowerShell, 저장소 루트에서):
+1. 백엔드 켜기: `cd backend` → `.\gradlew.bat bootRun` (창은 그대로 두기)
+2. 새 창에서 터널 켜기: `.\scripts\start-tunnel.ps1 -Push`
+   - 터널 주소를 `netlify.toml`에 넣고 GitHub에 올려요. 약 1분 뒤 Netlify가 새로 배포해요.
+   - 이 창을 닫으면 터널이 꺼져요. 터널을 다시 켜면 주소가 바뀌니, 그때마다 이 명령을 다시 실행해요.
+3. 확인: https://gilltoe.netlify.app/api/health 가 `{"status":"ok"}`이면 연결된 거예요.
+
+---
+
 ## 연결 확인 순서 (브라우저)
 
 1. http://localhost:8080/api/health → `{"status":"ok"}` 이면 **백엔드** OK

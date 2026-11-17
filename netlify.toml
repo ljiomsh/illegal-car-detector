@@ -1,0 +1,26 @@
+# Netlify 배포 설정 (GitHub에 올리면 Netlify가 이 파일을 읽고 자동으로 빌드·배포해요)
+# Netlify에는 화면(frontend)만 올라가요. 사진 판별·기록(/api)은 Spring Boot 백엔드가 따로 켜져 있어야 해요.
+
+[build]
+  base = "frontend"          # frontend 폴더에서
+  command = "npm run build"  # 배포용 파일을 만들고
+  publish = "dist"           # frontend/dist 폴더를 올려요 (base 기준)
+
+[build.environment]
+  NODE_VERSION = "22"        # Vite 8은 Node 20.19 이상이 필요해요 (개발 PC: Node 22)
+
+# 사진 판별·기록 요청(/api/...)은 내 PC의 백엔드로 넘겨요. (cloudflared 터널 주소)
+# 터널을 다시 켜면 주소가 바뀌어요 → scripts/start-tunnel.ps1 -Push 로 새 주소를 넣고 올려요.
+# 브라우저 입장에서는 같은 주소(netlify.app)라서 CORS 설정이 필요 없어요.
+[[redirects]]
+  from = "/api/*"
+  to = "https://hide-beginning-division-accessory.trycloudflare.com/api/:splat"
+  status = 200
+  force = true
+
+# 화면의 주소(/check, /history, /about)를 새로고침하거나 바로 열어도 404가 나지 않게,
+# 없는 주소는 모두 index.html을 보여 주고 React Router가 화면을 골라요.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
